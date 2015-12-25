@@ -78,110 +78,12 @@ Prozesse in einem Organsimus (z.B. Verteilung von Sauerstoff übers Blut, Stoffw
 Ausbreitung von Pflanzen und Tieren.
 
 
-============= Ältere Gedanken, die unter obigen Eindrücken nochmal überprüft werden müssen: ==============
+============= Ältere Gedanken: ==============
 
 
-
-Entstehung kleiner Universen simulieren: Ich will beobachten, wie kleine Partikel sich unter ihrer eigenen Schwerkraft zu komplexen Systeme zusammenziehen. Dazu soll man mit der Maus Partikel auf dem Bildschirm verteilen und ihnen mit einem "Schubs" einen Impuls verleihen. Partikel haben die Eigenschaften Ort, Geschwindigkeit, Protonenzahl, Neutronenzahl, Elektronenzahl und eventuell auch Name und Farbe, sowie Größe und Masse (welche sich allerdings aus den anderen Eigenschaften berechnen ließe).
-Der User soll per ComboBox-Menü auswählen können, welche Partikel (Wasserstoff-Atome, Sauerstoff-Atome, Elektronen, Photonen, ...) er gerade erzeugt. Außerdem soll er die vier Grundkräfte der Physik jeweils aktivieren oder deaktivieren können, um dann zu beobachten, wie die Teilchen in seinem Universum sich verhalten. Da könnte man dann solche Sachen wie die Entstehung von stabilen Umlaufbahnen, von Sternen und vielleicht sogar das Fließen von Strom und das Emittieren von Lich (Raytracer!) beobachten... Das ganze sollte, um anschaulich zu bleiben und nicht zu rechenhungrig zu werden, in 2D stattfinden! Allerdings könnte man auch nach der Dimensionalität parametrisieren. Es bietet sich aber auch an, das Modell grundsätzlich in 3D zu basteln, denn das ist sehr *universal*...Die Kräfte
-ließen sich vielleicht mit Integratoren ähnlich denen in Numitras simulieren...
-Die Stärken der Kräfte sollen regelbar sein, die Eigenschaften von Protonen und Neutronen (z.B. Masse und Größe) dagegegen nicht!
-Reaktionen zwischen Partikeln sind definiert durch probabilistische Inferenzregeln: Wenn bestimmte Bedingungen zwischen zwei Teilchen herrschen, werden diese durch das Ergebnis der Regel ersetzt (induzierte Kernspaltung, spontane Kernspaltung, Kernfusion, Weitergabe von Elektronen, Emission von Lichtquanten mit bestimmter Frequenz...).
-Siehe http://de.wikipedia.org/wiki/Kernspaltung und http://de.wikipedia.org/wiki/Kernfusion, sowie den Wikipedia-Artikel über Bindungsenergie!
-Um später noch Dinge wie Photonen einfügen zu können, sollte ich wahrscheinlich viel mit Interfaces arbeiten. Überhaupt empfiehlt sich ein wohlüberlegtes Design, da ja absehbar ist, was als künftige Erweiterungen eventuell in Betracht kommt...
-Das AMG könnte ein solches Tool ja mal in seinen Physik-Unterricht einbauen...
-Als Sprache empfiehlt sich aus Performanzgründen C++ mit Qt, aber einfacher umzusetzen wäre es wahrscheinlich in C# mit Windows Forms (wobei das doch recht langsam und schlecht zu Linux kompatibel ist). Es empfiehlt sich, Hardwarebeschleunigung zu nutzen. Für einen Raytracer in 3D könnte man das ganze auch so implementieren, dass nur dann ein Pixel gesetzt wird, wenn es von einem Photon getroffen wurde...
-Am nettesten wäre es natürlich, das in Programma zu schreiben, wofür man aber erst mal einen Programma-Compiler und eine grundlegende GUI-Bibliothek bräuchte...
-Mir scheint, das folgendes gilt:
-1. Alle Vorhersagen der speziellen Relativitätstheorie ergeben sich daraus, dass jeder Beobachter im Universum für das ihn erreichende Licht immer die Geschwindigkeit c misst!
-2. Alle Vorhersagen der allgemeinen Relativitätstheorie ergeben sich daraus, dass Masse die Raumzeit "krümmt" (was sich für uns dreidimensionale Ameisen nicht zeigt), weshalb die Flugbahnen von Objekten um sie herum durch einen "Massetrog" deformiert werden.
-   Deshalb wird z.B. Licht auch durch Gravitation beeinflusst. Vielleicht lässt sich mit E = mc² aber auch dem Licht eine Masse zuschreiben, aus der sich mit der Gravitationsformel die laut Einstein vorhergesagte Ablenkung ergibt?
-   Man beacht den dynamischen Massezuwachs (m(v)) !
-Wie sich allerdings herausgestellt hat, ist, wie der Name es bereits vermuten lässt, die spezielle Relativitätstheorie in der allgemeinen enthalten!
-Es ist anzustreben, dass ich mich bei der Implementierung des Basissystems nicht auf eine bestimmte Theorie von Raum und Zeit festlege!
-Besser wäre es, das System so auszulegen, dass man auch bezüglich Quantenmechanik und Stringtheorien damit experimentieren kann! (Sofern das machbar ist).
-Dann brauche ich mich selber nicht um die Relativitätstheorie und die Quantenelktrodynamik zu kümmern, sofern ich das nicht will!
-Zu diesem Zweck sollte man höchstens fordern, dass Partikel eine dreidimensionale Position bereitstellen, damit man sie darstellen kann!
-(Schließlich wollen wir uns nicht darauf verlassen, dass der Nutzer seinen Rechner tatsächlich mit der Simulation von Photonen beladen will...)
-Es ist zu untersuchen, inwiefern dann die Konzepte Kraft und Beschleunigung verallgemeinert werden müssen und ob man immer noch RungeKutta-Integratoren einsetzen kann!
-Die Sache mit den durch Inferenzregeln definierten Partikelreaktionen jedenfalls, soll unbedingt erhalten bleiben, damit der Nutzer von unnötigen Details abstrahieren kann!
-Ich habe Grund zu der Hoffnung, die Effekte der speziellen Relativitätstheorie ließen sich vollständig modellieren, wenn man im Modell nicht von einer beschränkten Lichtgeschwindigkeit ausgeht 
-	(d.h. wenn ein Atom, dass mit halber Lichtgeschwindigkeit ein Elektron mit Lichtgeschwindigkeit aussendet, soll dieses im Modell 1,5-fache Lichtgeschwindigkeit haben!)
-	und in der Darstellung des Simulationsablaufs die Lorentztransformtion auf die Modell-Koordinaten loslässt 
-	(Wenn sich besagtes Atom relativ zum Beobachter bewegt, kann man seine Raumzeitkoordinaten für Zustand der Simulation  mittels Lorenztransformation entlang des aktuellen Geschwindigkeitsvektors transformieren. Gleiches gilt auch für das Elektron, so dass beide Teilchen langsamer werden, wobei das Elektorn in der Darstellung dann genau mit Lichtgeschwindigkeit erscheint!)
-	Man beachte hierfür vor allem den ersten Abschnitt des Wikipedia-Artikels zur Lorenztransformation!
-Wenn sich die spezielle Relativitätstheorie so implementieren lässt, muss sie im Modell gar nicht beachtet werden :)
-Es bleibt die allgemeine. Schön wäre es, wenn man gemäß E(v) = m(v) * c^2 allen Objekten, auch Lichtteilchen eine Masse zuschreiben und damit ihre Anziehung modellieren könnte.
-Dann könnte man sich vielleicht das scheinbar komplexe Krümmen der Raumzeit ersparen. Da Licht dann also auf Massen zubeschleunigt wird, sieht der Beobachter aufgrund der dadurch erhöhten Geschwindigkeit des Lichts gemäß der speziellen Relativitätstheorie tatsächlich eine Krümmung.
-Wenn sich dieses tatsächlich so implementieren ließe (wofür es aber unter http://de.wikipedia.org/wiki/Masse_%28Physik%29#Spezielle_Relativit.C3.A4tstheorie Gegenrede gibt), bräuchte das Basissystem die Relativitätstheorie nicht zu betrachten :) Das würde alles über Plugins erledigt...
-(Und eventuell müsste die GUI da einiges berücksichtigen, vor allem was Zeitdilatation und Längenkontraktion angeht, aber auch das würde man in Plugins kapseln).
-Überhaupt wäre ein größtmögliches Maß an Modularisierung wünschenswert, damit ganz verschiedene Modelle der Wirklichkeit, also z.B. auch die Äthertheorie und anderes Zeug betrachtet werden können!
-Die Krönung wäre, das System so allgemeingültig und flexibel zu halten, dass sich damit eines Tages auch eine (funktionierende) String-Theorie simulieren ließe...
-Diese Flexibilität ist wahrscheinlich, denn wahrscheinlich weder Zeit noch Lust, mich mit den Feldgleichungen der ART und Unwägbarkeiten der Quantenwelt auseinanderzusetzen
-Wie bauen wir also die Simulation?
-Sagen wir mal: Zentral ist die Klasse Particle.
-			   Ein Simulationsszustand besteht aus einem Zeitpunkt t und der Information über die Zustände im Zeitpunkt t existenten Teilchen.
-			   Die Simulation-Klasse propagiert vom aktuellen Zustand immer zum nächsten, mit konfigurierbarer, eventuell adaptiver Zeitschrittweite, bis man sie anweist, aufzuhören (siehe Skizze zur Simulation-Klasse)
-
-
-Es fragt sich, welche Klasse die Integration eines Teilchens durchführt. Alternativen:
-	1. Die Simulation hält den Integrator und integriert damit alle Teilchen. Problem: Dafür muss die Simulation davon ausgehen können, dass jedes Teilchen gewisse Eigenschaften, wie Ort und Geschwindigkeit (Achtung, Heisenberg!) besitzt.
-	2. Jede Kraft hat einen Integrator. Problem: Das ist unsinnig, denn um zu integrieren, benötigt der Integrator die Summe aller Kraftvektoren, die das Teilchen beschleunigen. Die Kräfte müssten also untereinander kommunizieren (aufwändig zu coden, fehleranfällig, langsam)
-	3. Jedes Teilchen ist sein eigener Integrator. Das kommt mir am allerschönsten vor. Die Klasse Particle sieht dann so aus:
-		abstract class Particle {
-			abstract ParticleState integrate(SimState s); // berechnet den nächsten Teilchenzustand
-			abstract ParticleState interpolate (ParticleState past, time now, ParticleState future); //"Mittlet" zwei zeitlich diskrete Teilchenzustände
-			abstract void draw(Graphics g); //Zeichnet das Teilchen. (Stattdessen könnte auch die Übermittlung der Position verlangt werden, damit ein bewegter Beobachter die SRT berücksichtigen kann)
-		}
-		
-		Die Methode integrate übernimmt dabei nicht nur die Positionspropagation, sondern könnte z.B. auch Reaktionen mit anderen Teilchen implementieren.
-		Ob ein anderes Teilchen mit dem aktuellen wechselwirkt, hängt natürlich auch von dessen Parametern und vor allem seinem Typ ab. Z.B. wird ein Wasserstoffatom gravitativ nur mit den Teilchen wechselwirken, die das Interface IMassy implementieren...
-		
-		Der ParticleState allerdings ist etwas unschön: Da die Simulation ja (oft) nicht in Echtzeit läuft, müssen die Stützpunkte protokolliert werden. Es ist dabei zuerst einmal zu untersuchen, welche Funktionalität in der Particle- und welche in der ParticleState-Klasse vorzuhalten ist...
-		Möglicherweise erweist es sich aber auch als nötig, Particle-Instanzen wirklich kopieren zu können... Schließlich will man eine Simulation, die man gerade abspielt, vielleicht ja auch anhalten und dann modifizieren... Andererseits könnte es sich auch als günstig erweisen, im Simulationsprotokoll möglichst viele Daten der Particle-Klasse zu verwerfen, um effizient damit arbeiten zu können... Dann wäre vielleicht Konstruktoren Particle(ParticleState s) und ParticleState(Particle p) nötig... (wobei mir das ein wenig fragwürdig vorkommt, da es einen Isomorphismus auf den beiden induzieren müsste...)
-	
-	
-	
-Und hier ist der Plan:
-
-	Wir entwickeln in C++.
-	Der Kern des Programms ist eine Bibliothek namens Universe, die die gesamte Simulationslogik bereitstellt. Darauf aufbauend soll es verschiedene GUI-Frontends geben.
-	Für den Anfang wollen wir nur ein einfaches 2D-Frontend, damit man schnell was ansehnliches bekommt, ohne sich zu sehr mit OpenGL rumschlagen zu müssen.
-	Die Kernbibliothek muss sich für folgende Anwendungsszenarien eignen:
-		Simulation kleiner Systeme (z.B. 1000 Partikel) in Echtzeit in 2D/3D. Der Nutzer soll mit dem System interagieren können.
-		Simulation gigantischer Systeme (bis zu 1 Milliarde Partikel). Die Simulation soll sich vom Benutzer im Ressourcenverbrauch beschränken, sowie anhalten und fortsetzen lassen, damit eine Berechnung über größere Zeiträume möglich ist. Idealerweise ließe sich die Simulation nicht nur auf verschiedene Prozessoren, sondern sogar auf räumlich und zeitlich getrennte Computer verteilen!
-		Darstellung bereits fertig vorberechneter Simulationen in Echtzeit in 2D/3D.
-		Ausgabe einer Videodatei aus dem simulierten Universum.
-		
-	Mögliche Darstellungsarten:
-		2D
-		3D mit schwacher Beleuchtung und Matrizengeometrie
-		3D per Raytracing.
-	
-	
-	
-	
-Wir müssen folgende Entitäten betrachten:
-
-	Partikel
-		Partikel besitzen gewisse Eigenschaften, aber nicht alle Partikel besitzen alle Eigenschaften (z.B. hat nicht jeder Partikel eine Farbe oder eine Frequenz)
-		Wasserstoffatom, Eisenatom, Wassermolekül, Proton, Neutron, Elektron, Photon, ...
-	Kräfte
-		Geben an, wie ein gegebener Partikel zum gegebenen Zeitpunkt zu beschleunigen ist. Dazu brauchen sie Zugriff auf die gesamte Simulation.
-		Beispiele: Gravitation, Coulombkraft, Kernkräfte, Lorentzkraft
-		Möglicherweise sollte das Modell der Simulation gar keine Kräfte kennen... Viel eher wären diese wohl den entsprechenden Integratoren unterzuordnen. Aber Achtung: Die Berechnung von Kräften (wie z.B. Gravitation und Coulombkraft) ist sehr aufwändig, weshalb man dafür den Barnes-Hut-Algorithmus verwendet.
-		Meine Überlegungen zeigen, dass es Sinn macht, die Kräfte im Kernsystem komplett außen vor zu lassen. Vielmehr werden sie durch Integratoren eingeführt und müssen nur diesen bekannt sein. Eine Instanz des Barnes-Hut-Algorithmus können sich die Integratoren mit diversen technischen Tricks sehr leicht teilen.
-	Integratoren
-		Sie erhalten in jeden Zeitschritt die Gelegenheit, die Eigenschaften der Teilchen zu verändern, bzw. sie durch neue Teilchen zu ersetzen.
-		Beispiele: RungeKutta für die Bewegung, Spaltung/Fusion für Atomkerne, Current für die Abgabe/Aufnahme von Elektronen.
-		Integratoren sind zentrale Bestandteile der Simulation. Obwohl sie Informationen an die Partikel anheften können, gibt es z.B. nur einen einzige Instanz des RungeKutta-Integrators, die für jedes Teilchen einmal pro Zeitschritt aufgerufen wird.
-		Eventuell könnte es nützlich sein, Integratoren nicht dazu zu zwingen, für jeden Zeitschritt tatsächlich eine Stützstelle anzulegen...
-		Sollte ein Integrator (so wie die RungeKutta-Integratoren) zusätzliche Unterstützstellen benötigen, so ist das sein Problem. Er muss die Daten dafür in den vorgesehenen Feldern der Partikelobjekte speichern.
-		
-
-	Die Simulation muss also ihre Partikel und die Integratoren kennen, die beide auf die soeben beschriebene Weise arbeiten.
-
-Einen abgeschmackten Prototypen, der um beliebige Partikel, Kräfte und Reaktionen erweiterbar ist, können wir mir aufgrund dieser Überlegungen bereits bauen. Es bleiben zwei Probleme:
+Einen abgeschmackten Prototypen, der um beliebige Partikel, Kräfte und 
+Reaktionen erweiterbar ist, können wir mir aufgrund dieser Überlegungen bereits 
+bauen. Es bleiben zwei Probleme:
 1. In welcher Form stellen wir den Output der Simulation bereit, um ihn geeignet weiterzuverarbeiten.
 	Antwort: Das Simulation-Objekt enthält immer nur die aktuelle Stützstelle. Die Daten werden sofort nach ihrer Berechnung in einen "Abnehmer" gedumpt. Solche Abnehmer könnten ein Wrapper für Festplatten oder ein Speicherstream sein, aber auch ein Display-Objekt, dass die Daten auf dem Bildschirm darstellt, sowie ein Video-Encoder, der ein Video der Simulation erstellt. Auf diese Weise sind nur dann große Speicherressourcen erforderlich, wenn die Simulation in ihrer Gesamtheit gespeichert werden soll. und z.B. nicht für die Erstellung eines Videos. Idealerweise sollten aber sogar mehrere Dump-Objekte bedient werden! Die Dump-Objekte entscheiden selbst, was sie mit der ihnen übergebenen Stützstelle anfangen wollen und sollten eigene Agenten sein!
 	
@@ -200,10 +102,5 @@ weiterleitet.
 		Dabei werden die lokalen Kerne so gründlich wie möglich bzw. erlaubt ausgenutzt und es wird aufgrund einer dynamischen Performance-Schätzung der Rest der Daten von den Vorgängern verlangt. Das Berechnungsgrid verteilt seine Rechenlast auf diese Weise automatisch und dezentral.
 		
 		Die Integratoren werden also nur für die Teilchen aufgerufen, für die sich das SO im Grid zuständig fühlt. Trotzdem braucht jeder Knoten potenziell Informationen über *alle* Partikel des vergangenen Zeitschrittes. Die SO geben diese Informationen über's Netzwerk weiter. Diese Weitergabe muss so beschaffen sein, dass nur die nötigen Informationen weitergegeben werden: Beispielsweise könnte ein Knoten nur für die Gravitation einer Hälfte der Teilchen zuständig sein, nicht aber für ihre Kernreaktionen. Deshalb sollten für diesen Knoten auch nur die Informationen des Gravitationsintegrators übertragen werden und nicht die Informationen für den Kernreaktionsintegrator.
-		Hieran wird deutlich: Obwohl alle Simulationsknoten alle Teilchen behandeln müssen, haben sie nicht alle die selben Integratoren.
-		
-		
-************ Aktueller Stand *************
-
-Mit obenstehendem (ab "Wir müssen folgende Entitäten betrachten") ist die Problemlösung wahrscheinlich vollständig umrissen. Diese muss nun weiter ausgearbeitet werden, damit quasi eine dokumentierte Leerimplementierung der Kernkomponente in C++ entstehen kann.
-		
+		Hieran wird deutlich: Obwohl alle Simulationsknoten alle Teilchen 
+behandeln müssen, haben sie nicht alle die selben Integratoren.
