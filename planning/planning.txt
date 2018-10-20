@@ -1,6 +1,15 @@
 
 #### NEUESTE GEDANKEN:
 
+Statt der DSL, die unten erwähnt wird (und wohl sehr schwer performant zu 
+implementieren und über die Zeit konsistent und kompatibel zu halten wäre), 
+verlange ich einfach, dass man mir ein Objekt mit einer Signatur namnes 
+"update" gibt, um Partikelinteraktionen zu modellieren. Solche Objekte kann 
+ich dann mit beliebig krankem CUDA/Thrust-Code basteln und wenn's mir zu blöd 
+wird, baue ich mir halt in C++ eine schöne Factory für solche Objekte: Die 
+nimmt dann, ähnlich wie die DSL highlevel die Spezifikation entgegen und 
+kompiliert daraus beliebig kranken CUDA-Shit.
+
 Man könnte ein Bezahlsystem hinzufügen: Nodes wählen dann immer den Nachbarn für einen Auftrag aus, der das beste Preis-Rechenzeit-Verhältnis anbietet. Bevor der Nachbar die Berechnung beginnt, muss über eine Bank ein wähnungstransfer abgewickelt worden sein. Wenn man das einbaut, kann man die Software später mal (wenn man selber als großer, zuverlässiger Rechenknoten etabliert ist) rausgeben und quelloffen machen und sich trotzdem ne goldene Nase verdienen. Aber vermutlich klappt das nicht, denn man müsste dafür selber große Rechenkapazitäten haben, die man sich wohl bei Amazon mieten würde. Und dann würde jeder Hinz und Kunz bei Amazon mieten, oder die Leute würden immer direkt ihr Zeug bei Amazon aufsetzen. Andererseits: Normale Enduser wollen einfach nur mit dem Ding spielen und beeindruckende Dinge sehen. Dafür würden die auch Geld auf den Tisch legen...
 
 Man sollte es so machen, dass die Eigenschaften, die wir pro Teilchen tracken, solche wie diese hier sind:
