@@ -3,6 +3,8 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Particles", "Particles\Particles.csproj", "{EF2D2CB4-9026-41F1-B8DC-516DD9F6E15E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{D60EF322-F7F7-4E4B-9042-5B4F5C9FD521}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -13,5 +15,9 @@ Global
 		{EF2D2CB4-9026-41F1-B8DC-516DD9F6E15E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EF2D2CB4-9026-41F1-B8DC-516DD9F6E15E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EF2D2CB4-9026-41F1-B8DC-516DD9F6E15E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D60EF322-F7F7-4E4B-9042-5B4F5C9FD521}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D60EF322-F7F7-4E4B-9042-5B4F5C9FD521}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D60EF322-F7F7-4E4B-9042-5B4F5C9FD521}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D60EF322-F7F7-4E4B-9042-5B4F5C9FD521}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

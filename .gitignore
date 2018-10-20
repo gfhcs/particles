@@ -1,2 +1,5 @@
-
-*.directory
+**/.vs
+**/bin
+**/obj
+**/packages
+*.user

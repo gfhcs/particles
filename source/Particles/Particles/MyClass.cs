@@ -6,5 +6,11 @@ namespace Particles
         public MyClass()
         {
         }
+
+        public int Test()
+        {
+            Console.WriteLine("Hello World");
+            return 42;
+        }
     }
 }
