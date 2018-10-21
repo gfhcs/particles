@@ -3,6 +3,8 @@ using Xunit;
 using Particles;
 using System.IO;
 using System.Drawing;
+using System.Diagnostics;
+
 namespace Tests
 {
     public class Test
@@ -10,7 +12,9 @@ namespace Tests
         [Fact()]
         public void TestVideoWriter()
         {
-            var file = new FileStream("/tmp/videoWriterTest.mp4", FileMode.Create);
+            var path = "/tmp/videoWriterTest.avi";
+
+            var file = new FileStream(path, FileMode.Create);
 
             int w = 800;
             int h = 600;
@@ -28,6 +32,14 @@ namespace Tests
                         vw.Append(img);
                     }
             }
+
+            var args = "--no-one-instance --no-qt-error-dialogs {0} vlc://quit";
+            var vlcInfo = new ProcessStartInfo("vlc", string.Format(args, path));
+
+            var vlc = Process.Start(vlcInfo);
+            vlc.WaitForExit();
+
+            Assert.Equal(0, vlc.ExitCode);
         }
     }
 }
