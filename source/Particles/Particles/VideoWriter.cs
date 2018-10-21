@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
+using System.Diagnostics;
 
 namespace Particles
 {
@@ -9,7 +11,8 @@ namespace Particles
     /// </summary>
     public enum VideoCodec
     {
-        H264
+        H264,
+        MJPEG
     }
 
     /// <summary>
@@ -17,6 +20,20 @@ namespace Particles
     /// </summary>
     public class VideoWriter : IDisposable
     {
+        private static string codec2string(VideoCodec codec)
+        {
+            switch(codec)
+            {
+                case VideoCodec.H264:
+                    return "libx264";
+                case VideoCodec.MJPEG:
+                    return "mjpeg";
+                default:
+                    throw new NotImplementedException(string.Format("The codec {0} has not been accounted for in the implementation of the VideoWriter class!", codec));
+            }
+        }
+
+        private Process ffmpeg;
         private Stream stream;
         private readonly VideoCodec codec;
         private readonly int width, height;
@@ -38,8 +55,24 @@ namespace Particles
             this.height = height;
             this.fps = fps;
 
-            // TODO: Launch FFMPEG and make it write to 'stream'!
+            const string args = "-y -f image2pipe  -i - -c:v {0} -framerate {1} pipe:1";
+            var ffmpegInfo = new ProcessStartInfo("ffmpeg", string.Format(args, codec2string(codec), fps));
 
+            ffmpegInfo.UseShellExecute = false;
+            ffmpegInfo.RedirectStandardInput = true;
+            ffmpegInfo.RedirectStandardOutput = true;
+            ffmpegInfo.RedirectStandardError = true;
+
+            this.ffmpeg = Process.Start(ffmpegInfo);
+
+            ffmpeg.ErrorDataReceived += (object sender, DataReceivedEventArgs e) =>
+            {
+                ffmpeg.CancelErrorRead();
+                throw new IOException(string.Format("FFMPEG reported an error: {0}", e.Data));
+            };
+            ffmpeg.BeginErrorReadLine();
+
+            ffmpeg.StandardOutput.BaseStream.CopyToAsync(stream);
         }
 
         #region "Properties"
@@ -94,7 +127,9 @@ namespace Particles
         /// <param name="frame">Frame.</param>
         public void Append(Image frame)
         {
-            //TODO: Pass frame to FFMPEG!
+            if (frame.Size != this.Resolution)
+                throw new ArgumentException(string.Format("Cannot add a frame of resolution {0}x{1} to a video with resolution {2}x{3} !", frame.Width, frame.Height, width, height));
+            frame.Save(ffmpeg.StandardInput.BaseStream, ImageFormat.Png);
         }
 
         /// <summary>
@@ -105,8 +140,8 @@ namespace Particles
             if (stream == null)
                 throw new InvalidOperationException("This VideoWriter object has already been closed!");
 
-            // TODO: Close FFMPEG communcation!
-
+            ffmpeg.StandardInput.BaseStream.Close();
+            ffmpeg.WaitForExit();
             stream.Close();
             stream = null;
         }
