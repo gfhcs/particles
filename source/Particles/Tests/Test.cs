@@ -8,13 +8,6 @@ namespace Tests
     public class Test
     {
         [Fact()]
-        public void TestMethod()
-        {
-            var m = new Particles.MyClass();
-            Assert.Equal(42, m.Test());
-        }
-
-        [Fact()]
         public void TestVideoWriter()
         {
             var file = new FileStream("/tmp/videoWriterTest.mp4", FileMode.Create);
