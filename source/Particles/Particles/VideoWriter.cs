@@ -55,7 +55,7 @@ namespace Particles
             this.height = height;
             this.fps = fps;
 
-            const string args = "-y -f image2pipe  -i - -c:v {0} -framerate {1} pipe:1";
+            const string args = "-loglevel error -y -f image2pipe  -i - -c:v {0} -framerate {1} -f avi pipe:1";
             var ffmpegInfo = new ProcessStartInfo("ffmpeg", string.Format(args, codec2string(codec), fps));
 
             ffmpegInfo.UseShellExecute = false;
@@ -68,7 +68,8 @@ namespace Particles
             ffmpeg.ErrorDataReceived += (object sender, DataReceivedEventArgs e) =>
             {
                 ffmpeg.CancelErrorRead();
-                throw new IOException(string.Format("FFMPEG reported an error: {0}", e.Data));
+                if (e.Data != null && e.Data.Trim().Length > 0)
+                    throw new IOException(string.Format("FFMPEG reported an error: {0}", e.Data));
             };
             ffmpeg.BeginErrorReadLine();
 
