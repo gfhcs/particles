@@ -47,6 +47,7 @@ namespace Tests
             Assert.Equal(0, vlc.ExitCode);
         }
 
+        [Fact()]
         public void TestMoonEarth()
         {
             var path = "/tmp/testMoonEarth.avi";
