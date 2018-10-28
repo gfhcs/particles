@@ -40,6 +40,7 @@
     <Compile Include="IQuantity.cs" />
     <Compile Include="IDifferentiable.cs" />
     <Compile Include="IGradient.cs" />
+    <Compile Include="Vector3.cs" />
     <Compile Include="integrators\RungeKuttaIntegrator.cs" />
     <Compile Include="integrators\RK4.cs" />
     <Compile Include="quantities\MatterCloud.cs" />
