@@ -10,10 +10,14 @@ namespace Particles
     /// </summary>
     /// <remarks>
     /// Explicit Runge Kutta integrators update the quantity according to
-    /// y' = y + dt * (b_1 * k_1 + ... + b_s * k_s)
+    /// y_{n + 1} = y_n + dt * (b_1 * k_1 + ... + b_s * k_s)
     /// where the b_j are weights and
     /// k_j = f(t + dt * c_j, y + dt * (a_j1 * k1 + ... + a_jj * kj))
     /// with c_j being coefficients as well.
+    /// f(t, y) is the gradient of the quantity at time t and state y.
+    /// Note that <see cref="IDifferentiable{Q, G}.GetGradient"/> does not make
+    /// use of t, which is why <see cref="RungeKuttaIntegrator{Q, G}"/> ignores
+    /// coefficients c.
     /// </remarks>
     /// <typeparam name="Q">The type that represents amounts of the quantity.</typeparam>
     /// <typeparam name="G">The type that represents values of the gradient for the quantity.</typeparam>

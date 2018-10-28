@@ -38,12 +38,15 @@
     <Compile Include="VideoWriter.cs" />
     <Compile Include="IIntegrator.cs" />
     <Compile Include="IQuantity.cs" />
-    <Compile Include="RungeKuttaIntegrator.cs" />
     <Compile Include="IDifferentiable.cs" />
     <Compile Include="IGradient.cs" />
+    <Compile Include="integrators\RungeKuttaIntegrator.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="integrators\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>
