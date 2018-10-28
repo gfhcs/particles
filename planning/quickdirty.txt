@@ -1,0 +1,10 @@
+The 2-body simulation should run now!
+Mehr Partikel: Wie viel gehen maximal auf Laptop und Desktop?
+Parallelisieren mit Tasks!
+Barnes-Hut!
+Embeded Runge-Kutta
+Renderer-Klassen einführen. Für Renderer braucht man Cameras. Achtung: Auch Renderer werden mal mit Tasks arbeiten müssen!
+Partikel abstrahieren: Man will mit Arrays von Partikeln arbeiten, die sich mit Eigenschaften und Kräften erweitern lassen!
+Am liebsten würde ich jetzt dafür sorgen, dass Tasks auch übers Netzwerk verteilt werden...
+Und dann würde man Tasks auch gerne noch auf die GPU auslagern.
+ 
