@@ -41,12 +41,14 @@
     <Compile Include="IDifferentiable.cs" />
     <Compile Include="IGradient.cs" />
     <Compile Include="integrators\RungeKuttaIntegrator.cs" />
+    <Compile Include="quantities\MatterCloud.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="integrators\" />
+    <Folder Include="quantities\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>
