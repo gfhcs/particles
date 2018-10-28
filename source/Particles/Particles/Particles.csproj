@@ -41,6 +41,7 @@
     <Compile Include="IDifferentiable.cs" />
     <Compile Include="IGradient.cs" />
     <Compile Include="integrators\RungeKuttaIntegrator.cs" />
+    <Compile Include="integrators\RK4.cs" />
     <Compile Include="quantities\MatterCloud.cs" />
   </ItemGroup>
   <ItemGroup>
