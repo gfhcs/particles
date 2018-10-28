@@ -17,7 +17,7 @@ namespace Particles
     /// </remarks>
     /// <typeparam name="Q">The type that represents amounts of the quantity.</typeparam>
     /// <typeparam name="G">The type that represents values of the gradient for the quantity.</typeparam>
-    public abstract class RungeKuttaIntegrator<Q, G> : IIntegrator<Q, G> where Q : IDifferentiable<Q, G> where G : IGradient<Q, G>
+    public class RungeKuttaIntegrator<Q, G> : IIntegrator<Q, G> where Q : IDifferentiable<Q, G> where G : IGradient<Q, G>
     {
         private readonly ImmutableArray<long> butcher;
         private readonly long d;
