@@ -25,6 +25,7 @@ namespace Particles
         {
             this.state = initialState.Copy();
             this.integrator = integrator;
+            this.stepSize = stepSize;
         }
 
         /// <summary>
@@ -77,7 +78,8 @@ namespace Particles
         {
             if (!(dt > 0.0))
                 throw new ArgumentException(string.Format("{0} must be positive!", nameof(dt)));
-            
+
+            time += dt;
             for (; dt > stepSize; dt -= stepSize)
                 integrator.Integrate(state, stepSize);
             integrator.Integrate(state, dt);
