@@ -53,7 +53,8 @@ namespace Particles
 
             this.butcher = butcher;
             this.d = d;
-            this.s = (int)Math.Round(Math.Sqrt(8 * l - 25)) / 2;
+
+            this.s = ((int)Math.Round(Math.Sqrt(8 * l + 25)) - 5) / 2;
 
             if ((s * s + 5 * s) / 2 != l)
                 throw new ArgumentException("The given array does not have dimensions valid for a butcher tableau!");
