@@ -47,15 +47,62 @@ namespace Tests
             Assert.Equal(0, vlc.ExitCode);
         }
 
+
+        private void TestSimulation(MatterCloud initialState,
+                                          IIntegrator<MatterCloud, MatterCloudGradient> integrator,
+                                          string fileName,
+                                          int radius = 1,
+                                          int w=800,
+                                          int h=600,
+                                          double scale = 0.5 * (1.0 / 149597870700) * 600,
+                                          double fps=25,
+                                          double stepSize = 86400,
+                                          double visualDuration=60.0, 
+                                          double simulatedDuration=365*86400)
+        {
+            var path = string.Format("/tmp/{0}", fileName);
+            var file = new FileStream(path, FileMode.Create);
+
+            var state = initialState;
+
+            var dt = (simulatedDuration / visualDuration) / fps;
+
+            var bitmap = new Bitmap(w, h);
+
+            using (var vw = new VideoWriter(file, VideoCodec.H264, w, h, fps))
+                for (var sim = new Simulation<MatterCloud, MatterCloudGradient>(state, integrator, stepSize);
+                     sim.Time < simulatedDuration; sim.Advance(dt))
+                {
+                    using (var g = Graphics.FromImage(bitmap))
+                    {
+                        g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+                        g.Clear(Color.Black);
+
+                        foreach (var p in sim.State.Positions)
+                        {
+                            var x = w / 2 + (int)(scale * p.X);
+                            var y = h / 2 - (int)(scale * p.Y);
+                            g.FillEllipse(Brushes.White, x - radius / 2, y - radius / 2, radius, radius);
+                        }
+                    }
+
+                    vw.Append(bitmap);
+                }
+
+            vlc(path);
+        }
+
         [Fact()]
         public void TestMoonEarth()
         {
-            var path = "/tmp/testMoonEarth.avi";
-            var file = new FileStream(path, FileMode.Create);
+            var fileName = "testMoonEarth.avi";
+
+            int radius = 50;
 
             int w = 800;
             int h = 600;
-            int r = Math.Min(w, h) / 10;
+            var scale = 0.5 * (1.0 / 362600000) * Math.Min(w, h);
+
             var fps = 15;
             var visualDuration = 60.0;
             var simulatedDuration = 2 * 30 * 24 * 60 * 60.0;
@@ -72,33 +119,7 @@ namespace Tests
             state.Velocities[0] = new Vector3(0, 0, 0);
             state.Velocities[1] = new Vector3(0, 1022, 0);
 
-            var scale = 0.5 * (1.0 / 362600000) * Math.Min(w, h);
-
-            var dt = (simulatedDuration / visualDuration) / fps;
-
-            var bitmap = new Bitmap(w, h);
-
-            using (var vw = new VideoWriter(file, VideoCodec.H264, w, h, fps))
-                for (var sim = new Simulation<MatterCloud, MatterCloudGradient>(state, new RK4<MatterCloud, MatterCloudGradient>(), stepSize);
-                     sim.Time < simulatedDuration; sim.Advance(dt))
-                {
-                    using (var g = Graphics.FromImage(bitmap))
-                    {
-                        g.Clear(Color.Black);
-
-                        foreach (var p in sim.State.Positions)
-                        {
-                            var x = w / 2 + (int)(scale * p.X);
-                            var y = h / 2 - (int)(scale * p.Y);
-                            g.FillEllipse(Brushes.White, x - r / 2, y - r / 2, r, r);
-                        }
-                    }
-
-                    vw.Append(bitmap);
-                }
-
-
-            vlc(path);
+            TestSimulation(state, new RK4<MatterCloud, MatterCloudGradient>(), fileName, radius, w, h, scale, fps, stepSize, visualDuration, simulatedDuration);
         }
     }
 }
