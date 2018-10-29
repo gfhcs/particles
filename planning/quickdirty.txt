@@ -1,5 +1,7 @@
-The 2-body simulation should run now!
+Tests: Factor out the simulation setup, s.t. we can just change numbers.
 Mehr Partikel: Wie viel gehen maximal auf Laptop und Desktop?
+I'd like to see an example of a symplectic iterator...
+Wie verhält sich die Gesamtenergie des Systems unter Integration?
 Parallelisieren mit Tasks!
 Barnes-Hut!
 Embeded Runge-Kutta
