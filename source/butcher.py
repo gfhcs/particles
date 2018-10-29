@@ -95,6 +95,12 @@ def lcm(*numbers):
 def d(fraction):
     return fraction[1]
 
+def lowerLeft(matrix):
+    i = 1
+    for row in matrix:
+        yield row[0:i]
+        i = i + 1
+
 if __name__ == '__main__' :
         
     s = obtain("Enter number s of stages:", int)
@@ -107,7 +113,7 @@ if __name__ == '__main__' :
     
     prefix = 'Butcher array = '
     
-    for n, d in itertools.chain(itertools.chain(*A), b, c):        
+    for n, d in itertools.chain(itertools.chain(*lowerLeft(A)), b, c):        
         print(prefix + str(n * (cd // d)), end='')
         prefix = ', '        
     print('')
