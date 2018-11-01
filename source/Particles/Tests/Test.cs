@@ -121,5 +121,75 @@ namespace Tests
 
             TestSimulation(state, new RK4<MatterCloud, MatterCloudGradient>(), fileName, radius, w, h, scale, fps, stepSize, visualDuration, simulatedDuration);
         }
+
+        RandomVector rndv = new RandomVector(new Random());
+
+        [Fact()]
+        void TestSample1()
+        {
+            var r = 512;
+
+            var bitmap = new Bitmap(2 * r, 2 * r);
+
+            using (var g = Graphics.FromImage(bitmap))
+            {
+                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+                g.Clear(Color.Black);
+
+                for (int i = 0; i < 100000; i++)
+                {
+                    var s = new Vector3(r, r, r) + rndv.NextVector(r);
+                    g.FillEllipse(Brushes.White, (int)s.X, (int)s.Y, 1, 1);
+                }
+            }
+
+            var path = "/tmp/disksampletest.png";
+
+            bitmap.Save(path);
+
+            var gwenview = new ProcessStartInfo("gwenview", path);
+
+            gwenview.UseShellExecute = false;
+
+            Process.Start(gwenview).WaitForExit();
+        }
+
+        [Fact()]
+        void TestSample2()
+        {
+            var n = 1000000;
+            var r = 128;
+            var path = "/tmp/disksampletest.avi";
+            var file = new FileStream(path, FileMode.Create);
+
+            var bitmap = new Bitmap(2 * r, 2 * r);
+
+            var samples = new Vector3[n];
+            for (int i = 0; i < n; i++)
+                samples[i] = rndv.NextVector(r);
+            Array.Sort(samples);
+
+            int k = 0;
+            using (var vw = new VideoWriter(file, VideoCodec.H264, 2 * r, 2 * r, 1))
+                for (int i = -r; i < r; i++) {
+                    using (var g = Graphics.FromImage(bitmap))
+                    {
+                        g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+                        g.Clear(Color.Black);
+
+                        for (; k < n && samples[k].X <= i; k++)
+                        {
+                            var s = samples[k];
+                            var x = r + (int)(s.Y);
+                            var y = r - (int)(s.Z);
+                            g.FillEllipse(Brushes.White, x, y, 1, 1);
+                        }
+                    }
+
+                    vw.Append(bitmap);
+                }
+
+            vlc(path);
+        }
     }
 }

@@ -45,6 +45,7 @@
     <Compile Include="integrators\RungeKuttaIntegrator.cs" />
     <Compile Include="integrators\RK4.cs" />
     <Compile Include="quantities\MatterCloud.cs" />
+    <Compile Include="RandomVector.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
