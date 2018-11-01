@@ -4,7 +4,7 @@ namespace Particles
     /// <summary>
     /// A vector of three real numbers.
     /// </summary>
-    public struct Vector3
+    public struct Vector3 : IEquatable<Vector3>, IComparable<Vector3>
     {
         private readonly double x, y, z;
 
@@ -53,6 +53,39 @@ namespace Particles
             get {
                 return Math.Sqrt(x * x + y * y + z * z);
             }
+        }
+
+        public int CompareTo(Vector3 other)
+        {
+            var c = this.x.CompareTo(other.x);
+            if (c != 0) return c;
+            c = y.CompareTo(other.y);
+            if (c != 0) return c;
+            return z.CompareTo(other.z);
+        }
+
+        public bool Equals(Vector3 other)
+        {
+            return this.x.Equals(other.x) && this.y.Equals(other.y) && this.z.Equals(other.z);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (!(obj is Vector3))
+                return false;
+                    
+            var other = (Vector3)obj;
+            return this.Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return unchecked(31 * x.GetHashCode() + 7 * y.GetHashCode() + z.GetHashCode());
+        }
+
+        public override string ToString()
+        {
+            return string.Format("({0}, {1}, {2})", x, y, z);
         }
 
         #region "Arithmetic"
