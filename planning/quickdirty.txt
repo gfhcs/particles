@@ -1,12 +1,17 @@
-Tests: Factor out the simulation setup, s.t. we can just change numbers.
 Mehr Partikel: Wie viel gehen maximal auf Laptop und Desktop?
-I'd like to see an example of a symplectic iterator...
+    --> Dafür sollten wir mit der Masse des Sonnensystems und seinen Ausdehnungen arbeiten
+    --> Ein Testfall soll die Teilchenanzahl abhängig von der Maschine wählen und fehlschlagen, wenn wir nicht mindestens 10 Frames pro Sekunde rendern können.
 Wie verhält sich die Gesamtenergie des Systems unter Integration?
+I'd like to see an example of a symplectic iterator...
 Parallelisieren mit Tasks!
 Barnes-Hut!
 Embeded Runge-Kutta
 Renderer-Klassen einführen. Für Renderer braucht man Cameras. Achtung: Auch Renderer werden mal mit Tasks arbeiten müssen!
+    --> Eine Camera mappt States auf Frames. Ein Renderer bekommt eine Sequenz von States und produziert daraus ein Video.
+    --> Außerdem sollte es so etwas wie einen State-Buffer geben, damit die Simulation schon weitere Schritte berechnen kann, während der Renderer noch rendert. 
+    --> Und ich will in der Lage sein, State-Sequenzen auf die Platte zu serialisieren!
 Partikel abstrahieren: Man will mit Arrays von Partikeln arbeiten, die sich mit Eigenschaften und Kräften erweitern lassen!
+    --> Ich glaube, eine gute Idee wäre es, eine abstrakte Klasse ParticleCloud einzuführen. Erben können dieser dann Arrays hinzufügen. Das ginge z.B. mit Property-Objekten (Farbe, Ladung, Masse, ...) und Force-Objekten (Gravity, Coulomb, ...)
 Am liebsten würde ich jetzt dafür sorgen, dass Tasks auch übers Netzwerk verteilt werden...
 Und dann würde man Tasks auch gerne noch auf die GPU auslagern.
  
