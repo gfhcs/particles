@@ -47,7 +47,20 @@ namespace Tests
             Assert.Equal(0, vlc.ExitCode);
         }
 
-
+        /// <summary>
+        /// Runs a simulation and plays back its rendering.
+        /// </summary>
+        /// <param name="initialState">The initial state of the matter cloud to be simulated.</param>
+        /// <param name="integrator">An integrator for matter clouds.</param>
+        /// <param name="fileName">The file name for the rendering of the simulation, including the extension.</param>
+        /// <param name="radius">The size with particles are rendered, in pixels.</param>
+        /// <param name="w">The width of the rendering frame, in pixels.</param>
+        /// <param name="h">The height of the rendering frame, in pixels.</param>
+        /// <param name="scale">The factor by which physical dimensions are scaled for rendering.</param>
+        /// <param name="fps">The number of frames per second in the rendering.</param>
+        /// <param name="stepSize">The step size for the integrator, in seconds.</param>
+        /// <param name="visualDuration">The duration of the video to be rendered, in seconds.</param>
+        /// <param name="simulatedDuration">The amount of time the simulation should cover, in seconds.</param>
         private void TestSimulation(MatterCloud initialState,
                                           IIntegrator<MatterCloud, MatterCloudGradient> integrator,
                                           string fileName,
