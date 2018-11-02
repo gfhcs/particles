@@ -1,3 +1,9 @@
+Singularität fixen
+    Ginge es mit einer toten Zone? Wir könnten Heuristiken haben: Wenn die Geschwindigkeit mit der die Teilchen sich näher kommen, hinreichend groß ist (nämlich so groß, dass sie sich im nächsten Zeitschritt kreuzen), geben wir als Beschleunigung einfach genau den Vektor aus, der dafür sorgt, dass sie nach dem Zeitschritt immer noch genau die selbe Summe aus potenzieller und kinetischer Energie aufweisen.
+    Ginge es mit adaptiven Integratoren?
+    Ginge es mit symplektischen Integratoren?
+    
+In den Frames sollte die Rechengeschwindigkeit (in fps) gedruckt werden.
 Mehr Partikel: Wie viel gehen maximal auf Laptop und Desktop?
     --> Dafür sollten wir mit der Masse des Sonnensystems und seinen Ausdehnungen arbeiten
     --> Ein Testfall soll die Teilchenanzahl abhängig von der Maschine wählen und fehlschlagen, wenn wir nicht mindestens 10 Frames pro Sekunde rendern können.
