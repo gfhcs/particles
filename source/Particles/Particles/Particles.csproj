@@ -44,7 +44,7 @@
     <Compile Include="Vector3.cs" />
     <Compile Include="integrators\RungeKuttaIntegrator.cs" />
     <Compile Include="integrators\RK4.cs" />
-    <Compile Include="quantities\MatterCloud.cs" />
+    <Compile Include="quantities\BallCloud.cs" />
     <Compile Include="RandomVector.cs" />
     <Compile Include="BinomialFilter.cs" />
     <Compile Include="DiscreteFilter.cs" />

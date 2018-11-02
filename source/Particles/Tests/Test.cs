@@ -64,8 +64,8 @@ namespace Tests
         /// <param name="stepSize">The step size for the integrator, in seconds.</param>
         /// <param name="visualDuration">The duration of the video to be rendered, in seconds.</param>
         /// <param name="simulatedDuration">The amount of time the simulation should cover, in seconds.</param>
-        private void TestSimulation(MatterCloud initialState,
-                                          IIntegrator<MatterCloud, MatterCloudGradient> integrator,
+        private void TestSimulation(BallCloud initialState,
+                                          IIntegrator<BallCloud, BallCloudGradient> integrator,
                                           string fileName,
                                           int radius = 1,
                                           int w=800,
@@ -86,7 +86,7 @@ namespace Tests
             var bitmap = new Bitmap(w, h);
 
             using (var vw = new VideoWriter(file, VideoCodec.H264, w, h, fps))
-                for (var sim = new Simulation<MatterCloud, MatterCloudGradient>(state, integrator, stepSize);
+                for (var sim = new Simulation<BallCloud, BallCloudGradient>(state, integrator, stepSize);
                      sim.Time < simulatedDuration; sim.Advance(dt))
                 {
                     using (var g = Graphics.FromImage(bitmap))
@@ -123,7 +123,7 @@ namespace Tests
             var visualDuration = 60.0;
             var simulatedDuration = 2 * 30 * 24 * 60 * 60.0;
 
-            var state = new MatterCloud(2);
+            var state = new BallCloud(2);
 
             var stepSize = 24 * 60 * 60.0;
             state.Positions[0] = new Vector3(0, 0, 0);
@@ -135,7 +135,7 @@ namespace Tests
             state.Velocities[0] = new Vector3(0, 0, 0);
             state.Velocities[1] = new Vector3(0, 1022, 0);
 
-            TestSimulation(state, new RK4<MatterCloud, MatterCloudGradient>(), fileName, radius, w, h, scale, fps, stepSize, visualDuration, simulatedDuration);
+            TestSimulation(state, new RK4<BallCloud, BallCloudGradient>(), fileName, radius, w, h, scale, fps, stepSize, visualDuration, simulatedDuration);
         }
 
         RandomVector rndv = new RandomVector(new Random());
@@ -223,7 +223,7 @@ namespace Tests
             double fps = 25;
             double visualDuration = (simulatedDuration / stepSize) / fps;
 
-            var initial = new MatterCloud(n);
+            var initial = new BallCloud(n);
 
             var m = mass / n;
 
@@ -252,7 +252,7 @@ namespace Tests
                 initial.Velocities[i] *= ef;
             }
 
-            TestSimulation(initial, new RK4<MatterCloud, MatterCloudGradient>(), string.Format("cloud{0}.avi", n), 5, w, h, scale, fps, stepSize, visualDuration, simulatedDuration);
+            TestSimulation(initial, new RK4<BallCloud, BallCloudGradient>(), string.Format("cloud{0}.avi", n), 5, w, h, scale, fps, stepSize, visualDuration, simulatedDuration);
         }
 
         /// <summary>
@@ -273,7 +273,7 @@ namespace Tests
             var visualDuration = 60.0;
             var simulatedDuration = 2 * 30 * 24 * 60 * 60.0;
 
-            var state = new MatterCloud(2);
+            var state = new BallCloud(2);
 
             var stepSize = 24 * 60 * 60.0;
             state.Positions[0] = new Vector3(0, 0, 0);
@@ -282,7 +282,7 @@ namespace Tests
             state.Masses[0] = 5.97237E24;
             state.Masses[1] = 7.342E22;
 
-            TestSimulation(state, new RK4<MatterCloud, MatterCloudGradient>(), fileName, radius, w, h, scale, fps, stepSize, visualDuration, simulatedDuration);
+            TestSimulation(state, new RK4<BallCloud, BallCloudGradient>(), fileName, radius, w, h, scale, fps, stepSize, visualDuration, simulatedDuration);
         }
 
 
