@@ -9,6 +9,7 @@ Mehr Partikel: Wie viel gehen maximal auf Laptop und Desktop?
     --> Ein Testfall soll die Teilchenanzahl abhängig von der Maschine wählen und fehlschlagen, wenn wir nicht mindestens 10 Frames pro Sekunde rendern können.
 Wie verhält sich die Gesamtenergie des Systems unter Integration?
 I'd like to see an example of a symplectic iterator...
+Halbierung der Arbeit: Die Beschleunigung, die A durch B erfährt, ist genau das Inverse der Beschleunigung, die B durch A erfährt, d.h. mit Caching können wir uns die Hälfte der Berechnungen sparen.
 Parallelisieren mit Tasks!
 Barnes-Hut!
 Embeded Runge-Kutta
