@@ -46,6 +46,8 @@
     <Compile Include="integrators\RK4.cs" />
     <Compile Include="quantities\MatterCloud.cs" />
     <Compile Include="RandomVector.cs" />
+    <Compile Include="BinomialFilter.cs" />
+    <Compile Include="DiscreteFilter.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
