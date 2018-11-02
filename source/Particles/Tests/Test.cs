@@ -292,9 +292,9 @@ namespace Tests
         [Fact()]
         public void TestCloud1()
         {
-            var n = 10;
-            var m = 7.342E22; // Mass of the moon
-            var v = 0.1 * 1022.0; // Multiple of the velocity of the moon
+            var n = 1000;
+            var m = 0.1 * 7.342E22; // Mass of the moon
+            var v = 0.01 * 1022.0; // Multiple of the velocity of the moon
             var s = 2 * 385001000.0; // multiple distance between Moon and Earth
             var d = 86400; // 1 day
             var D = 120 * 30 * 86400; // 10 years
