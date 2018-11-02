@@ -219,7 +219,7 @@ namespace Tests
         {
             int w = 1920;
             int h = 1080;
-            double scale = 0.5 * h / size;
+            double scale = 0.2 * h / size;
             double fps = 25;
             double visualDuration = (simulatedDuration / stepSize) / fps;
 
