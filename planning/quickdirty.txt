@@ -1,16 +1,11 @@
-Testfälle sollten Radii ordentlich setzen und vor allem rendern
-    --> Den Anfang macht BinaryOscillation
-Singularität fixen: Partikel sind keine Punktmassen mehr, sondern bekommen einen Radius. Sich überschneidende Partikel ziehen sich nur noch teilweise an, so dass es keine Singularitäten mehr gibt.
-In den Frames sollte die Rechengeschwindigkeit (in fps) gedruckt werden.
 Mehr Partikel: Wie viel gehen maximal auf Laptop und Desktop?
     --> Dafür sollten wir mit der Masse des Sonnensystems und seinen Ausdehnungen arbeiten
     --> Ein Testfall soll die Teilchenanzahl abhängig von der Maschine wählen und fehlschlagen, wenn wir nicht mindestens 10 Frames pro Sekunde rendern können.
-Wie verhält sich die Gesamtenergie des Systems unter Integration?
-I'd like to see an example of a symplectic iterator...
+Implement symplectic integrators and create test cases for them. See English Wikipedia page.
 Optimization: Die Beschleunigung, die A durch B erfährt, ist genau das Inverse der Beschleunigung, die B durch A erfährt, d.h. mit Caching können wir uns die Hälfte der Berechnungen sparen.
 Optimization: Parallelisieren mit Tasks!
 Optimization: Barnes-Hut!
-Optimization: Embeded Runge-Kutta
+Optimization: Embedded Runge-Kutta
 Optimization: Separate step sizes for each particle
 Renderer-Klassen einführen. Für Renderer braucht man Cameras. Achtung: Auch Renderer werden mal mit Tasks arbeiten müssen!
     --> Eine Camera mappt States auf Frames. Ein Renderer bekommt eine Sequenz von States und produziert daraus ein Video.
