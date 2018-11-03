@@ -143,7 +143,13 @@ namespace Particles
 
                     var r = c.Positions[j] - c.Positions[i];
 
-                    accelerations[i] += (r / r.Magnitude) * G * c.Masses[j] / (r * r);
+                    var d = r.Magnitude;
+
+                    // These angles become large only when particles are close together:
+                    var alpha = Math.Atan(c.Radii[j] / d);
+                    var beta = Math.Atan(c.Radii[i] / d);
+
+                    accelerations[i] += (r / d) * G * Math.Cos(alpha) * Math.Cos(beta) * c.Masses[j] / (d * d);
                 }
         }
 

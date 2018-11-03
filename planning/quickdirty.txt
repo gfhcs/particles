@@ -1,3 +1,5 @@
+Testfälle sollten Radii ordentlich setzen und vor allem rendern
+    --> Den Anfang macht BinaryOscillation
 Singularität fixen: Partikel sind keine Punktmassen mehr, sondern bekommen einen Radius. Sich überschneidende Partikel ziehen sich nur noch teilweise an, so dass es keine Singularitäten mehr gibt.
 In den Frames sollte die Rechengeschwindigkeit (in fps) gedruckt werden.
 Mehr Partikel: Wie viel gehen maximal auf Laptop und Desktop?
