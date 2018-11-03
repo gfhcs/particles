@@ -63,7 +63,11 @@ namespace Tests
         /// <param name="stepSize">The step size for the integrator, in seconds.</param>
         /// <param name="visualDuration">The duration of the video to be rendered, in seconds.</param>
         /// <param name="simulatedDuration">The amount of time the simulation should cover, in seconds.</param>
-        private void TestSimulation(BallCloud initialState,
+        /// <param name="assertFPS">
+        /// The minimum rate at which frames are to be rendered (in frames per second). Unrelated to <paramref name="fps"/>.
+        /// If the machine is unable to render at least this many frames per second, this test fails.
+        /// </param>
+        private double TestSimulation(BallCloud initialState,
                                           IIntegrator<BallCloud, BallCloudGradient> integrator,
                                           string fileName,
                                           int w=800,
@@ -72,7 +76,8 @@ namespace Tests
                                           double fps=25,
                                           double stepSize = 86400,
                                           double visualDuration=60.0, 
-                                          double simulatedDuration=365*86400)
+                                          double simulatedDuration=365*86400,
+                                          double assertFPS=0)
         {
             var path = string.Format("/tmp/{0}", fileName);
             var file = new FileStream(path, FileMode.Create);
@@ -87,16 +92,25 @@ namespace Tests
             var B = f * f / 2; // A constant factor chosen such that that z = 0 gives brightness 0.5
             var o = (int)(0.75 * 255);
 
+            int framesRendered = 0;
+            Stopwatch watch = null;
+
+            var rfps = 0.0;
             using (var vw = new VideoWriter(file, VideoCodec.H264, w, h, fps))
-                for (var sim = new Simulation<BallCloud, BallCloudGradient>(state, integrator, stepSize);
-                     sim.Time < simulatedDuration; sim.Advance(dt))
+            {
+                var sim = new Simulation<BallCloud, BallCloudGradient>(state, integrator, stepSize);
+
+                watch = Stopwatch.StartNew();
+
+                for (;sim.Time < simulatedDuration; sim.Advance(dt))
                 {
                     using (var g = Graphics.FromImage(bitmap))
                     {
                         g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
                         g.Clear(Color.Black);
 
-                        for (int i = 0; i < sim.State.Positions.Length; i++){
+                        for (int i = 0; i < sim.State.Positions.Length; i++)
+                        {
                             var p = scale * sim.State.Positions[i];
                             var r = Math.Max(1, (int)(scale * sim.State.Radii[i]));
                             var x = w / 2 + (int)(p.X);
@@ -110,9 +124,21 @@ namespace Tests
                     }
 
                     vw.Append(bitmap);
+
+                    framesRendered++;
+
+                    rfps = framesRendered / ((framesRendered - 1) * rfps + watch.Elapsed.TotalSeconds);
+
+                    Assert.True(framesRendered < assertFPS || rfps >= assertFPS, string.Format("Can only render {0} frames per second, instead of the required {1} frames per second!", rfps, assertFPS));
+
+                    watch.Restart();
                 }
 
+                watch.Stop();
+            }
+
             vlc(path);
+            return rfps;
         }
 
         [Fact()]
@@ -224,7 +250,11 @@ namespace Tests
         /// <param name="mass">The total mass of the cloud.</param>
         /// <param name="internalEnergy">The total kinetic energy of all the particles in the cloud.</param>
         /// <param name="radius">The size of the particles</param>
-        void TestRandomCloud(int n, double size, double mass, double radius, double internalEnergy, double stepSize, double simulatedDuration)
+        /// <param name="assertFPS">
+        /// The minimum rate at which frames are to be rendered (in frames per second). Unrelated to <paramref name="fps"/>.
+        /// If the machine is unable to render at least this many frames per second, this test fails.
+        /// </param>
+        double TestRandomCloud(int n, double size, double mass, double radius, double internalEnergy, double stepSize, double simulatedDuration, double assertFPS=0)
         {
             int w = 1920;
             int h = 1080;
@@ -262,7 +292,7 @@ namespace Tests
                 initial.Velocities[i] *= ef;
             }
 
-            TestSimulation(initial, new RK4<BallCloud, BallCloudGradient>(), string.Format("cloud{0}.avi", n), w, h, scale, fps, stepSize, visualDuration, simulatedDuration);
+            return TestSimulation(initial, new RK4<BallCloud, BallCloudGradient>(), string.Format("cloud{0}.avi", n), w, h, scale, fps, stepSize, visualDuration, simulatedDuration, assertFPS);
         }
 
         /// <summary>
