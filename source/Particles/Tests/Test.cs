@@ -174,7 +174,7 @@ namespace Tests
         {
             var n = 1000000;
             var r = 128;
-            var path = "/tmp/disksampletest.avi";
+            var path = "/tmp/ballsampletest.avi";
             var file = new FileStream(path, FileMode.Create);
 
             var bitmap = new Bitmap(2 * r, 2 * r);
@@ -185,7 +185,7 @@ namespace Tests
             Array.Sort(samples);
 
             int k = 0;
-            using (var vw = new VideoWriter(file, VideoCodec.H264, 2 * r, 2 * r, 1))
+            using (var vw = new VideoWriter(file, VideoCodec.H264, 2 * r, 2 * r, 30))
                 for (int i = -r; i < r; i++) {
                     using (var g = Graphics.FromImage(bitmap))
                     {
