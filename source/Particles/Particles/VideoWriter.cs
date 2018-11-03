@@ -55,7 +55,7 @@ namespace Particles
             this.height = height;
             this.fps = fps;
 
-            const string args = "-loglevel error -y -f image2pipe  -i - -c:v {0} -framerate {1} -f avi pipe:1";
+            const string args = "-loglevel error -y -f image2pipe -framerate {1} -i - -c:v {0} -f avi pipe:1";
             var ffmpegInfo = new ProcessStartInfo("ffmpeg", string.Format(args, codec2string(codec), fps));
 
             ffmpegInfo.UseShellExecute = false;
