@@ -56,7 +56,6 @@ namespace Tests
         /// <param name="initialState">The initial state of the matter cloud to be simulated.</param>
         /// <param name="integrator">An integrator for matter clouds.</param>
         /// <param name="fileName">The file name for the rendering of the simulation, including the extension.</param>
-        /// <param name="radius">The size with particles are rendered, in pixels.</param>
         /// <param name="w">The width of the rendering frame, in pixels.</param>
         /// <param name="h">The height of the rendering frame, in pixels.</param>
         /// <param name="scale">The factor by which physical dimensions are scaled for rendering.</param>
@@ -67,7 +66,6 @@ namespace Tests
         private void TestSimulation(BallCloud initialState,
                                           IIntegrator<BallCloud, BallCloudGradient> integrator,
                                           string fileName,
-                                          int radius = 1,
                                           int w=800,
                                           int h=600,
                                           double scale = 0.5 * (1.0 / 149597870700) * 600,
@@ -94,11 +92,12 @@ namespace Tests
                         g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
                         g.Clear(Color.Black);
 
-                        foreach (var p in sim.State.Positions)
-                        {
-                            var x = w / 2 + (int)(scale * p.X);
-                            var y = h / 2 - (int)(scale * p.Y);
-                            g.FillEllipse(Brushes.White, x - radius / 2, y - radius / 2, radius, radius);
+                        for (int i = 0; i < sim.State.Positions.Length; i++){
+                            var p = scale * sim.State.Positions[i];
+                            var r = Math.Max(1, (int)(scale * sim.State.Radii[i]));
+                            var x = w / 2 + (int)(p.X);
+                            var y = h / 2 - (int)(p.Y);
+                            g.FillEllipse(Brushes.White, x - r / 2, y - r / 2, r, r);
                         }
                     }
 
@@ -135,7 +134,7 @@ namespace Tests
             state.Velocities[0] = new Vector3(0, 0, 0);
             state.Velocities[1] = new Vector3(0, 1022, 0);
 
-            TestSimulation(state, new RK4<BallCloud, BallCloudGradient>(), fileName, radius, w, h, scale, fps, stepSize, visualDuration, simulatedDuration);
+            TestSimulation(state, new RK4<BallCloud, BallCloudGradient>(), fileName, w, h, scale, fps, stepSize, visualDuration, simulatedDuration);
         }
 
         RandomVector rndv = new RandomVector(new Random());
@@ -215,7 +214,8 @@ namespace Tests
         /// <param name="size">The initial size of the matter cloud.</param>
         /// <param name="mass">The total mass of the cloud.</param>
         /// <param name="internalEnergy">The total kinetic energy of all the particles in the cloud.</param>
-        void TestRandomCloud(int n, double size, double mass, double internalEnergy, double stepSize, double simulatedDuration)
+        /// <param name="radius">The size of the particles</param>
+        void TestRandomCloud(int n, double size, double mass, double radius, double internalEnergy, double stepSize, double simulatedDuration)
         {
             int w = 1920;
             int h = 1080;
@@ -238,6 +238,7 @@ namespace Tests
                 initial.Masses[i] = m;
                 initial.Positions[i] = p;
                 initial.Velocities[i] = v;
+                initial.Radii[i] = radius;
 
                 R = Math.Max(R, p.Magnitude);
                 E += 0.5 * m * v * v;
@@ -252,7 +253,7 @@ namespace Tests
                 initial.Velocities[i] *= ef;
             }
 
-            TestSimulation(initial, new RK4<BallCloud, BallCloudGradient>(), string.Format("cloud{0}.avi", n), 5, w, h, scale, fps, stepSize, visualDuration, simulatedDuration);
+            TestSimulation(initial, new RK4<BallCloud, BallCloudGradient>(), string.Format("cloud{0}.avi", n), w, h, scale, fps, stepSize, visualDuration, simulatedDuration);
         }
 
         /// <summary>
@@ -267,7 +268,7 @@ namespace Tests
 
             int w = 800;
             int h = 600;
-            var scale = 0.5 * (1.0 / 362600000) * Math.Min(w, h);
+            var scale = 0.475 * (1.0 / 362600000) * w;
 
             var fps = 15;
             var visualDuration = 60.0;
@@ -282,7 +283,10 @@ namespace Tests
             state.Masses[0] = 5.97237E24;
             state.Masses[1] = 7.342E22;
 
-            TestSimulation(state, new RK4<BallCloud, BallCloudGradient>(), fileName, radius, w, h, scale, fps, stepSize, visualDuration, simulatedDuration);
+            state.Radii[0] = 10 * 6371000.0;
+            state.Radii[1] = 10 * 1737100.0;
+
+            TestSimulation(state, new RK4<BallCloud, BallCloudGradient>(), fileName, w, h, scale, fps, stepSize, visualDuration, simulatedDuration);
         }
 
 
@@ -298,7 +302,7 @@ namespace Tests
             var s = 2 * 385001000.0; // multiple distance between Moon and Earth
             var d = 86400; // 1 day
             var D = 120 * 30 * 86400; // 10 years
-            TestRandomCloud(n, s, n * m, n * 0.5 * m * v * v, d, D);
+            TestRandomCloud(n, s, n * m, 1737100, n * 0.5 * m * v * v, d, D);
         }
     }
 }
