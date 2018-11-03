@@ -83,6 +83,10 @@ namespace Tests
 
             var bitmap = new Bitmap(w, h);
 
+            var f = Math.Max(w, h); // Scaled distance between camera plane and z = 0
+            var B = f * f / 2; // A constant factor chosen such that that z = 0 gives brightness 0.5
+            var o = (int)(0.75 * 255);
+
             using (var vw = new VideoWriter(file, VideoCodec.H264, w, h, fps))
                 for (var sim = new Simulation<BallCloud, BallCloudGradient>(state, integrator, stepSize);
                      sim.Time < simulatedDuration; sim.Advance(dt))
@@ -97,7 +101,11 @@ namespace Tests
                             var r = Math.Max(1, (int)(scale * sim.State.Radii[i]));
                             var x = w / 2 + (int)(p.X);
                             var y = h / 2 - (int)(p.Y);
-                            g.FillEllipse(Brushes.White, x - r / 2, y - r / 2, r, r);
+
+                            var d = f - p.Z;
+                            var b = (int)(255 * B / (d * d));
+
+                            g.FillEllipse(new SolidBrush(Color.FromArgb(o, b, b, b)), x - r / 2, y - r / 2, r, r);
                         }
                     }
 
