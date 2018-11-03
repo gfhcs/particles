@@ -108,31 +108,32 @@ namespace Tests
         }
 
         [Fact()]
-        public void TestMoonEarth()
+        public void TestEarthMoon()
         {
-            var fileName = "testMoonEarth.avi";
+            var fileName = "testEarthMoon.avi";
 
-            int radius = 50;
-
-            int w = 800;
-            int h = 600;
+            int w = 1920;
+            int h = 1080;
             var scale = 0.5 * (1.0 / 362600000) * Math.Min(w, h);
 
-            var fps = 15;
+            var fps = 60;
             var visualDuration = 60.0;
             var simulatedDuration = 2 * 30 * 24 * 60 * 60.0;
 
             var state = new BallCloud(2);
 
-            var stepSize = 24 * 60 * 60.0;
+            var stepSize = 60 * 60.0;
             state.Positions[0] = new Vector3(0, 0, 0);
             state.Positions[1] = new Vector3(362600000, 0, 0);
 
             state.Masses[0] = 5.97237E24;
             state.Masses[1] = 7.342E22;
 
-            state.Velocities[0] = new Vector3(0, 0, 0);
+            state.Velocities[0] = new Vector3(0, -11, 0);
             state.Velocities[1] = new Vector3(0, 1022, 0);
+
+            state.Radii[0] = 6371000.0;
+            state.Radii[1] = 1737100.0;
 
             TestSimulation(state, new RK4<BallCloud, BallCloudGradient>(), fileName, w, h, scale, fps, stepSize, visualDuration, simulatedDuration);
         }
