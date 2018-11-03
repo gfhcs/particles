@@ -145,6 +145,9 @@ namespace Particles
 
                     var d = r.Magnitude;
 
+                    if (d < double.Epsilon)
+                        continue;
+
                     // These angles become large only when particles are close together:
                     var alpha = Math.Atan(c.Radii[j] / d);
                     var beta = Math.Atan(c.Radii[i] / d);
