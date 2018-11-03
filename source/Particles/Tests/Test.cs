@@ -220,8 +220,8 @@ namespace Tests
         {
             int w = 1920;
             int h = 1080;
-            double scale = 0.2 * h / size;
-            double fps = 25;
+            double scale = 0.25 * h / size;
+            double fps = 60;
             double visualDuration = (simulatedDuration / stepSize) / fps;
 
             var initial = new BallCloud(n);
@@ -290,18 +290,19 @@ namespace Tests
 
 
         /// <summary>
-        /// A minimal random cloud, of two particles.
+        /// A minimal random cloud, of 100 particles.
         /// </summary>
         [Fact()]
         public void TestCloud1()
         {
-            var n = 1000;
-            var m = 0.1 * 7.342E22; // Mass of the moon
-            var v = 0.01 * 1022.0; // Multiple of the velocity of the moon
+            var n = 100;
+            var m = 7.342E22; // Mass of the moon
+            var r = 15 * 1737100.0; // Multiple of the radius of the moon
+            var v = 0.5 * 1022.0; // Multiple of the velocity of the moon
             var s = 2 * 385001000.0; // multiple distance between Moon and Earth
-            var d = 86400; // 1 day
-            var D = 120 * 30 * 86400; // 10 years
-            TestRandomCloud(n, s, n * m, 1737100, n * 0.5 * m * v * v, d, D);
+            var d = 1 * 3600.0; // 1 hour
+            var D = 10 * 12 * 30 * 86400.0; // 10 years
+            TestRandomCloud(n, s, n * m, r, n * 0.5 * m * v * v, d, D);
         }
     }
 }
