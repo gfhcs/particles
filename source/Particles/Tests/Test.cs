@@ -264,13 +264,11 @@ namespace Tests
         {
             var fileName = "testBinaryOscillation.avi";
 
-            int radius = 50;
-
             int w = 1600;
             int h = 900;
             var scale = 0.475 * (1.0 / 362600000) * w;
 
-            var fps = 30;
+            var fps = 60;
             var visualDuration = 60.0;
             var simulatedDuration = 2 * 30 * 24 * 60 * 60.0;
 
