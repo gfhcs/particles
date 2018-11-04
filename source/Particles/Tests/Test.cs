@@ -44,10 +44,10 @@ namespace Tests
             var args = "--no-one-instance --no-qt-error-dialogs {0} vlc://quit";
             var vlcInfo = new ProcessStartInfo("vlc", string.Format(args, path));
 
-            var vlc = Process.Start(vlcInfo);
-            vlc.WaitForExit();
-
-            Assert.Equal(0, vlc.ExitCode);
+            using (var vlc = Process.Start(vlcInfo)){
+                vlc.WaitForExit();
+                Assert.Equal(0, vlc.ExitCode);
+            }
         }
 
         /// <summary>
@@ -201,7 +201,8 @@ namespace Tests
 
             gwenview.UseShellExecute = false;
 
-            Process.Start(gwenview).WaitForExit();
+            using (var p = Process.Start(gwenview))
+                p.WaitForExit();
         }
 
         [Fact()]
