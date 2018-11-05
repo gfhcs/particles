@@ -343,5 +343,15 @@ namespace Tests
             var D = 10 * 12 * 30 * 86400.0; // 10 years
             TestRandomCloud(n, s, n * m, r, n * 0.5 * m * v * v, d, D);
         }
+
+        /// <summary>
+        /// Tests retrieval of machine parameters.
+        /// </summary>
+        [Fact()]
+        public void TestMachineInfo()
+        {
+            MachineInfo m = MachineInfo.GetRunning();
+            Assert.Equal(m, m);
+        }
     }
 }
