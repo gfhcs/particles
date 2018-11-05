@@ -1,6 +1,4 @@
-Mehr Partikel: Wie viel gehen maximal auf Laptop und Desktop?
-    --> Dafür sollten wir mit der Masse des Sonnensystems und seinen Ausdehnungen arbeiten
-    --> Ein Testfall soll die Teilchenanzahl abhängig von der Maschine wählen und fehlschlagen, wenn wir nicht mindestens 10 Frames pro Sekunde rendern können.
+Einmessen: Arbeitsrechner, Desktoprechner
 Implement symplectic integrators and create test cases for them. See English Wikipedia page.
 Optimization: Die Beschleunigung, die A durch B erfährt, ist genau das Inverse der Beschleunigung, die B durch A erfährt, d.h. mit Caching können wir uns die Hälfte der Berechnungen sparen.
 Optimization: Parallelisieren mit Tasks!
