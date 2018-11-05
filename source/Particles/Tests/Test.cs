@@ -127,7 +127,7 @@ namespace Tests
 
                     framesRendered++;
 
-                    rfps = framesRendered / ((framesRendered - 1) * rfps + watch.Elapsed.TotalSeconds);
+                    rfps = framesRendered / ((rfps > 0 ? (framesRendered - 1) / rfps : 0.0) + watch.Elapsed.TotalSeconds);
 
                     Assert.True(framesRendered < assertFPS || rfps >= assertFPS, string.Format("Can only render {0} frames per second, instead of the required {1} frames per second!", rfps, assertFPS));
 
