@@ -5,6 +5,7 @@ using System.IO;
 using System.Drawing;
 using System.Diagnostics;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace Tests
 {
@@ -352,6 +353,56 @@ namespace Tests
         {
             MachineInfo m = MachineInfo.GetRunning();
             Assert.Equal(m, m);
+        }
+
+        /// <summary>
+        /// Enumerates all the benchmarks for the current machine.
+        /// </summary>
+        /// <returns>
+        /// An <see cref="IEnumerable{Tuple{int, double}}"/> of pairs (n, f),
+        /// where n is the number of particles and f is the rate at which
+        /// the machine should be able to render frames for a simulation containing
+        /// n particles.
+        /// </returns>
+        public static IEnumerable<object[]> EnumerateBenchmarks()
+        {
+            // For each known machine, we have a set of benchmark tuples (n, f),
+            // where n is a number of particles and f is the number of frames per second
+            // at which this machine should be able to render the simulation
+            var benchmarks = new Dictionary<MachineInfo, List<Tuple<int, double>>>();
+
+            var laptop = new MachineInfo("gereon-laptop.gereon", 3000000, 4, (long)8049484 * 1024, OperatingSystem.Linux);
+
+            benchmarks[laptop] = new List<Tuple<int, double>>();
+            benchmarks[laptop].Add(Tuple.Create(1, 8.0));
+            benchmarks[laptop].Add(Tuple.Create(10, 7.0));
+            benchmarks[laptop].Add(Tuple.Create(100, 7.0));
+            benchmarks[laptop].Add(Tuple.Create(500, 2.0));
+            benchmarks[laptop].Add(Tuple.Create(750, 1.0));
+
+            var rm = MachineInfo.GetRunning();
+
+            foreach (var bm in benchmarks[rm])
+                yield return new object[] { bm.Item1, bm.Item2 };
+        }
+
+        /// <summary>
+        /// This test case picks a number of particles depending on the specs of the current machine
+        /// and asserts that the machine is able to render at least 10 frames per second for a random
+        /// cloud with this many particles.
+        /// </summary>
+        [Theory()]
+        [MemberData(nameof(EnumerateBenchmarks))]
+        public void TestPerformance(int n, double rfps)
+        {
+            var m = 7.342E22; // Mass of the moon
+            var r = 15 * 1737100.0; // Multiple of the radius of the moon
+            var v = 0.5 * 1022.0; // Multiple of the velocity of the moon
+            var s = 2 * 385001000.0; // multiple distance between Moon and Earth
+            var d = 1 * 3600.0; // 1 hour
+            var D = 1 * 86400.0; // 1 day
+
+            TestRandomCloud(n, s, n * m, r, n * 0.5 * m * v * v, d, D, 1);
         }
     }
 }
