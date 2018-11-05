@@ -20,7 +20,6 @@ namespace Tests
     /// </summary>
     public struct MachineInfo : IEquatable<MachineInfo>
     {
-        private readonly string label;
         private readonly string hostname;
         private readonly double clockFrequency;
         private readonly int numHardwareThreads;
@@ -36,12 +35,11 @@ namespace Tests
         /// <param name="numHardwareThreads">The number of hardware threads.</param>
         /// <param name="memory">The size of the working memory of the machine, in bytes.</param>
         /// <param name="os">The operating system</param>
-        public MachineInfo(string label, string hostname, double clockFrequency, int numHardwareThreads, long memory, OperatingSystem os)
+        public MachineInfo(string hostname, double clockFrequency, int numHardwareThreads, long memory, OperatingSystem os)
         {
             this.clockFrequency = clockFrequency;
             this.numHardwareThreads = numHardwareThreads;
             this.memory = memory;
-            this.label = label;
             this.hostname = hostname;
             this.os = os;
         }
@@ -79,14 +77,6 @@ namespace Tests
         }
 
         /// <summary>
-        /// The label representing the machine.
-        /// </summary>
-        public string Label
-        {
-            get { return label; }
-        }
-
-        /// <summary>
         /// The hostname by which this machine is identified.
         /// </summary>
         public string Hostname
@@ -115,7 +105,7 @@ namespace Tests
         /// </summary>
         /// <param name="label">The label to be used for the running machine.</param>
         /// <returns>Information about the machine that is executing this call.</returns>
-        public static MachineInfo GetRunning(string label="[Running]")
+        public static MachineInfo GetRunning()
         {
             var os = GetOperatingSystem();
 
@@ -129,36 +119,43 @@ namespace Tests
                     // Hostname:
                     var hostnameInfo = new ProcessStartInfo("hostname");
                     hostnameInfo.RedirectStandardOutput = true;
+                    hostnameInfo.UseShellExecute = false;
                     using (var p = Process.Start(hostnameInfo))
-                        name = p.StandardOutput.ReadToEnd();
-
+                    {
+                        name = p.StandardOutput.ReadToEnd().Trim();
+                        p.WaitForExit();
+                    }
                     // Memory size:
                     using (var sr = new StreamReader("/proc/meminfo"))
                         while (!sr.EndOfStream){
                             var line = sr.ReadLine();
                             if (line.StartsWith("MemTotal:", StringComparison.InvariantCulture))
                             {
-                                var cells = line.Split();
+                                var cells = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                                 Debug.Assert(cells.Length == 3);
                                 Debug.Assert(cells[2] == "kB");
-                                ms = long.Parse(cells[1]);
+                                ms = long.Parse(cells[1]) * 1024;
                                 break;
                             }
                         }
 
                     // Max. CPU speed:
-                    using (var sr = new StreamReader("cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_max_freq"))
-                        while (!sr.EndOfStream)
-                        {
-                            clockSpeed = double.Parse(sr.ReadLine());
-                            hwc++;
-                        }
+
+                    int i;
+                    foreach (var cpu in Directory.EnumerateDirectories("/sys/devices/system/cpu/", "cpu*"))
+                        if (int.TryParse(cpu.Substring(cpu.LastIndexOf("/", StringComparison.InvariantCulture) + 4), out i))
+                            using (var sr = new StreamReader(Path.Combine(cpu, "cpufreq/scaling_max_freq")))
+                                {
+                                    clockSpeed += double.Parse(sr.ReadToEnd().Trim());
+                                    hwc++;
+                                }
+                    clockSpeed /= hwc;
                     break;
                 default:
                     throw new NotImplementedException(string.Format("Retrieval of machine information has not been implemented for {0}!", os));
             }
 
-            return new MachineInfo(label, name, clockSpeed, hwc, ms, os);
+            return new MachineInfo(name, clockSpeed, hwc, ms, os);
         }
 
         public override bool Equals(object obj)
@@ -172,12 +169,11 @@ namespace Tests
 
         public bool Equals(MachineInfo other)
         {
-            return this.label.Equals(other.label)
-                       && this.hostname.Equals(other.hostname) 
-                       && this.clockFrequency.Equals(other.clockFrequency) 
-                       && this.numHardwareThreads.Equals(other.numHardwareThreads)
-                       && this.memory.Equals(other.memory)
-                       && this.os.Equals(other.os);
+            return this.hostname.Equals(other.hostname) 
+                && this.clockFrequency.Equals(other.clockFrequency) 
+                && this.numHardwareThreads.Equals(other.numHardwareThreads)
+                && this.memory.Equals(other.memory)
+                && this.os.Equals(other.os);
         }
 
         public override int GetHashCode()
@@ -187,7 +183,7 @@ namespace Tests
 
         public override string ToString()
         {
-            return label;
+            return hostname;
         }
 
     }
