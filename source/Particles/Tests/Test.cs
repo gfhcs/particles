@@ -380,6 +380,17 @@ namespace Tests
             benchmarks[laptop].Add(Tuple.Create(500, 2.0));
             benchmarks[laptop].Add(Tuple.Create(750, 1.0));
 
+
+            var officeMachine = new MachineInfo("baraddur.cs.uni-saarland.de", 4000000, 8, (long)33604718592, OperatingSystem.Linux);
+
+            benchmarks[officeMachine] = new List<Tuple<int, double>>();
+            benchmarks[officeMachine].Add(Tuple.Create(1, 11.25));
+            benchmarks[officeMachine].Add(Tuple.Create(10, 11.0));
+            benchmarks[officeMachine].Add(Tuple.Create(100, 9.25));
+            benchmarks[officeMachine].Add(Tuple.Create(500, 2.0));
+            benchmarks[officeMachine].Add(Tuple.Create(750, 1.0));
+
+
             var rm = MachineInfo.GetRunning();
 
             foreach (var bm in benchmarks[rm])
