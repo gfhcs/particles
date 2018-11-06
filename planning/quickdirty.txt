@@ -1,4 +1,5 @@
-Einmessen: Arbeitsrechner, Desktoprechner
+Einmessen: Desktoprechner
+Prüfen: Geht die Zeit vor allem für's simulieren, oder vor allem für's Rendern drauf?
 Implement symplectic integrators and create test cases for them. See English Wikipedia page.
 Optimization: Die Beschleunigung, die A durch B erfährt, ist genau das Inverse der Beschleunigung, die B durch A erfährt, d.h. mit Caching können wir uns die Hälfte der Berechnungen sparen.
 Optimization: Parallelisieren mit Tasks!
