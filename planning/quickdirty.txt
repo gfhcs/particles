@@ -1,11 +1,11 @@
-Einmessen: Desktoprechner
 Prüfen: Geht die Zeit vor allem für's simulieren, oder vor allem für's Rendern drauf?
-Implement symplectic integrators and create test cases for them. See English Wikipedia page.
+    --> Falls es das Rendern ist, sollten wir das wohl zuerst optimieren...
 Optimization: Die Beschleunigung, die A durch B erfährt, ist genau das Inverse der Beschleunigung, die B durch A erfährt, d.h. mit Caching können wir uns die Hälfte der Berechnungen sparen.
 Optimization: Parallelisieren mit Tasks!
 Optimization: Barnes-Hut!
 Optimization: Embedded Runge-Kutta
 Optimization: Separate step sizes for each particle
+Implement symplectic integrators and create test cases for them. See English Wikipedia page.
 Renderer-Klassen einführen. Für Renderer braucht man Cameras. Achtung: Auch Renderer werden mal mit Tasks arbeiten müssen!
     --> Eine Camera mappt States auf Frames. Ein Renderer bekommt eine Sequenz von States und produziert daraus ein Video.
     --> Außerdem sollte es so etwas wie einen State-Buffer geben, damit die Simulation schon weitere Schritte berechnen kann, während der Renderer noch rendert. 
