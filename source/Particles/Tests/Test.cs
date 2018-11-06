@@ -130,7 +130,7 @@ namespace Tests
 
                     rfps = framesRendered / ((rfps > 0 ? (framesRendered - 1) / rfps : 0.0) + watch.Elapsed.TotalSeconds);
 
-                    Assert.True(framesRendered < assertFPS || rfps >= assertFPS, string.Format("Can only render {0} frames per second, instead of the required {1} frames per second!", rfps, assertFPS));
+                    Assert.True((framesRendered < assertFPS && sim.Time + dt < simulatedDuration) || rfps >= assertFPS, string.Format("Can only render {0} frames per second, instead of the required {1} frames per second!", rfps, assertFPS));
 
                     watch.Restart();
                 }
@@ -417,7 +417,7 @@ namespace Tests
             var d = 1 * 3600.0; // 1 hour
             var D = 1 * 86400.0; // 1 day
 
-            TestRandomCloud(n, s, n * m, r, n * 0.5 * m * v * v, d, D, 1);
+            TestRandomCloud(n, s, n * m, r, n * 0.5 * m * v * v, d, D, rfps);
         }
     }
 }
