@@ -118,7 +118,7 @@ namespace Tests
                             var y = h / 2 - (int)(p.Y);
 
                             var d = f - p.Z;
-                            var b = (int)(255 * B / (d * d));
+                            var b = Math.Min(255, (int)(255 * B / (d * d)));
 
                             g.FillEllipse(new SolidBrush(Color.FromArgb(o, b, b, b)), x - r / 2, y - r / 2, r, r);
                         }
