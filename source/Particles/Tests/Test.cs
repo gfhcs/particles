@@ -373,11 +373,11 @@ namespace Tests
 
             var laptop = new MachineInfo("gereon-laptop.gereon", 3000000, 4, (long)8049484 * 1024, OperatingSystem.Linux);
             benchmarks[laptop] = new List<Tuple<int, double>>();
-            benchmarks[laptop].Add(Tuple.Create(1, 8.0));
-            benchmarks[laptop].Add(Tuple.Create(10, 7.0));
-            benchmarks[laptop].Add(Tuple.Create(100, 7.0));
-            benchmarks[laptop].Add(Tuple.Create(500, 2.0));
-            benchmarks[laptop].Add(Tuple.Create(750, 1.0));
+            benchmarks[laptop].Add(Tuple.Create(1, 8.5));
+            benchmarks[laptop].Add(Tuple.Create(10, 8.5));
+            benchmarks[laptop].Add(Tuple.Create(100, 7.5));
+            benchmarks[laptop].Add(Tuple.Create(500, 2.5));
+            benchmarks[laptop].Add(Tuple.Create(750, 1.25));
 
             var officeMachine = new MachineInfo("baraddur.cs.uni-saarland.de", 4000000, 8, (long)33604718592, OperatingSystem.Linux);
             benchmarks[officeMachine] = new List<Tuple<int, double>>();
