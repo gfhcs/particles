@@ -372,7 +372,6 @@ namespace Tests
             var benchmarks = new Dictionary<MachineInfo, List<Tuple<int, double>>>();
 
             var laptop = new MachineInfo("gereon-laptop.gereon", 3000000, 4, (long)8049484 * 1024, OperatingSystem.Linux);
-
             benchmarks[laptop] = new List<Tuple<int, double>>();
             benchmarks[laptop].Add(Tuple.Create(1, 8.0));
             benchmarks[laptop].Add(Tuple.Create(10, 7.0));
@@ -380,9 +379,7 @@ namespace Tests
             benchmarks[laptop].Add(Tuple.Create(500, 2.0));
             benchmarks[laptop].Add(Tuple.Create(750, 1.0));
 
-
             var officeMachine = new MachineInfo("baraddur.cs.uni-saarland.de", 4000000, 8, (long)33604718592, OperatingSystem.Linux);
-
             benchmarks[officeMachine] = new List<Tuple<int, double>>();
             benchmarks[officeMachine].Add(Tuple.Create(1, 11.25));
             benchmarks[officeMachine].Add(Tuple.Create(10, 11.0));
@@ -390,6 +387,13 @@ namespace Tests
             benchmarks[officeMachine].Add(Tuple.Create(500, 2.0));
             benchmarks[officeMachine].Add(Tuple.Create(750, 1.0));
 
+            var desktopMachine = new MachineInfo("gereon-desktop", 3800000, 12, (long)67465666560, OperatingSystem.Linux);
+            benchmarks[desktopMachine] = new List<Tuple<int, double>>();
+            benchmarks[desktopMachine].Add(Tuple.Create(1, 24.0));
+            benchmarks[desktopMachine].Add(Tuple.Create(10, 24.0));
+            benchmarks[desktopMachine].Add(Tuple.Create(100, 20.0));
+            benchmarks[desktopMachine].Add(Tuple.Create(500, 4.0));
+            benchmarks[desktopMachine].Add(Tuple.Create(750, 2.0));
 
             var rm = MachineInfo.GetRunning();
 
