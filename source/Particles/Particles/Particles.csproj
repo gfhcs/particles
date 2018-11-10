@@ -48,6 +48,8 @@
     <Compile Include="RandomVector.cs" />
     <Compile Include="BinomialFilter.cs" />
     <Compile Include="DiscreteFilter.cs" />
+    <Compile Include="quantities\BallCloudRenderer.cs" />
+    <Compile Include="IRenderer.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

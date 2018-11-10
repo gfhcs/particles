@@ -89,11 +89,7 @@ namespace Tests
 
             var dt = (simulatedDuration / visualDuration) / fps;
 
-            var bitmap = new Bitmap(w, h);
-
-            var f = Math.Max(w, h); // Scaled distance between camera plane and z = 0
-            var B = f * f / 2; // A constant factor chosen such that that z = 0 gives brightness 0.5
-            var o = (int)(0.75 * 255);
+            var renderer = new BallCloudRenderer(w, h, scale);
 
             var performance = new TestPerformance();
             DateTime startTime = DateTime.Now;
@@ -112,26 +108,7 @@ namespace Tests
                 {
                     simulationWatch.Stop();
                     renderingWatch.Restart();
-                    using (var g = Graphics.FromImage(bitmap))
-                    {
-                        g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
-                        g.Clear(Color.Black);
-
-                        for (int i = 0; i < sim.State.Positions.Length; i++)
-                        {
-                            var p = scale * sim.State.Positions[i];
-                            var r = Math.Max(1, (int)(scale * sim.State.Radii[i]));
-                            var x = w / 2 + (int)(p.X);
-                            var y = h / 2 - (int)(p.Y);
-
-                            var d = f - p.Z;
-                            var b = Math.Min(255, (int)(255 * B / (d * d)));
-
-                            g.FillEllipse(new SolidBrush(Color.FromArgb(o, b, b, b)), x - r / 2, y - r / 2, r, r);
-                        }
-                    }
-
-                    vw.Append(bitmap);
+                    vw.Append(renderer.Render(sim.State));
                     renderingWatch.Stop();
 
                     performance = performance.Add(new TestPerformance(new TimeFraction(simulationWatch.Elapsed.TotalSeconds), new TimeFraction(renderingWatch.Elapsed.TotalSeconds), 0));
