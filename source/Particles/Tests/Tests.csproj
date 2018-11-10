@@ -41,10 +41,16 @@
     </Reference>
     <Reference Include="System.Drawing" />
     <Reference Include="System.Runtime.InteropServices.RuntimeInformation" />
+    <Reference Include="System.ValueTuple">
+      <HintPath>..\packages\System.ValueTuple.4.5.0\lib\net461\System.ValueTuple.dll</HintPath>
+    </Reference>
+    <Reference Include="mscorlib" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Test.cs" />
     <Compile Include="MachineInfo.cs" />
+    <Compile Include="TimeFraction.cs" />
+    <Compile Include="TestPerformance.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

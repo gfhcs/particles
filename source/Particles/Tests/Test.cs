@@ -51,6 +51,9 @@ namespace Tests
             }
         }
 
+
+
+
         /// <summary>
         /// Runs a simulation and plays back its rendering.
         /// </summary>
@@ -64,11 +67,10 @@ namespace Tests
         /// <param name="stepSize">The step size for the integrator, in seconds.</param>
         /// <param name="visualDuration">The duration of the video to be rendered, in seconds.</param>
         /// <param name="simulatedDuration">The amount of time the simulation should cover, in seconds.</param>
-        /// <param name="assertFPS">
-        /// The minimum rate at which frames are to be rendered (in frames per second). Unrelated to <paramref name="fps"/>.
-        /// If the machine is unable to render at least this many frames per second, this test fails.
+        /// <param name="expectedPerformance">
+        /// The expected performance of the test case on the executing machine.
         /// </param>
-        private double TestSimulation(BallCloud initialState,
+        private TestPerformance TestSimulation(BallCloud initialState,
                                           IIntegrator<BallCloud, BallCloudGradient> integrator,
                                           string fileName,
                                           int w=800,
@@ -78,7 +80,7 @@ namespace Tests
                                           double stepSize = 86400,
                                           double visualDuration=60.0, 
                                           double simulatedDuration=365*86400,
-                                          double assertFPS=0)
+                                          TestPerformance expectedPerformance=default(TestPerformance))
         {
             var path = string.Format("/tmp/{0}", fileName);
             var file = new FileStream(path, FileMode.Create);
@@ -93,18 +95,23 @@ namespace Tests
             var B = f * f / 2; // A constant factor chosen such that that z = 0 gives brightness 0.5
             var o = (int)(0.75 * 255);
 
-            int framesRendered = 0;
-            Stopwatch watch = null;
+            var performance = new TestPerformance();
+            DateTime startTime = DateTime.Now;
 
-            var rfps = 0.0;
+            var expectedSPS = expectedPerformance.SimulationTime.Rate;
+            var expectedRPS = expectedPerformance.RenderingTime.Rate;
+
             using (var vw = new VideoWriter(file, VideoCodec.H264, w, h, fps))
             {
                 var sim = new Simulation<BallCloud, BallCloudGradient>(state, integrator, stepSize);
-
-                watch = Stopwatch.StartNew();
+               
+                var simulationWatch = Stopwatch.StartNew();
+                var renderingWatch = new Stopwatch();
 
                 for (;sim.Time < simulatedDuration; sim.Advance(dt))
                 {
+                    simulationWatch.Stop();
+                    renderingWatch.Restart();
                     using (var g = Graphics.FromImage(bitmap))
                     {
                         g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
@@ -125,21 +132,33 @@ namespace Tests
                     }
 
                     vw.Append(bitmap);
+                    renderingWatch.Stop();
 
-                    framesRendered++;
+                    performance = performance.Add(new TestPerformance(new TimeFraction(simulationWatch.Elapsed.TotalSeconds), new TimeFraction(renderingWatch.Elapsed.TotalSeconds), 0));
 
-                    rfps = framesRendered / ((rfps > 0 ? (framesRendered - 1) / rfps : 0.0) + watch.Elapsed.TotalSeconds);
+                    var t = (DateTime.Now - startTime).TotalSeconds;
 
-                    Assert.True((framesRendered < assertFPS && sim.Time + dt < simulatedDuration) || rfps >= assertFPS, string.Format("Can only render {0} frames per second, instead of the required {1} frames per second!", rfps, assertFPS));
+                    if (performance.SimulationTime.StepCount >= 3){
 
-                    watch.Restart();
+                        var sps = performance.SimulationTime.Rate;
+                        var rps = performance.RenderingTime.Rate;
+
+                        Assert.True(sps >= expectedSPS, string.Format("Can only simulate {0} steps per second, but expected at least {1}!", sps, expectedSPS));
+                        Assert.True(rps >= expectedRPS, string.Format("Can only render {0} frames per second, but expected at least {1}!", rps, expectedRPS));
+                    }
+
+                    simulationWatch.Restart();
                 }
 
-                watch.Stop();
+                simulationWatch.Stop();
             }
 
+            performance = performance.AddTotalTime((DateTime.Now - startTime).TotalSeconds);
+
+            Assert.True(performance.TotalTime <= expectedPerformance.TotalTime, string.Format("The test case used {0} seconds, but was expected to take at most {1} seconds.", performance.TotalTime, expectedPerformance.TotalTime));
+
             vlc(path);
-            return rfps;
+            return performance;
         }
 
         [Fact()]
@@ -252,11 +271,10 @@ namespace Tests
         /// <param name="mass">The total mass of the cloud.</param>
         /// <param name="internalEnergy">The total kinetic energy of all the particles in the cloud.</param>
         /// <param name="radius">The size of the particles</param>
-        /// <param name="assertFPS">
-        /// The minimum rate at which frames are to be rendered (in frames per second). Unrelated to <paramref name="fps"/>.
-        /// If the machine is unable to render at least this many frames per second, this test fails.
+        /// <param name="expectedPerformance">
+        /// The expected performance of the test case on the executing machine.
         /// </param>
-        double TestRandomCloud(int n, double size, double mass, double radius, double internalEnergy, double stepSize, double simulatedDuration, double assertFPS=0)
+        TestPerformance TestRandomCloud(int n, double size, double mass, double radius, double internalEnergy, double stepSize, double simulatedDuration, TestPerformance expectedPerformance = default(TestPerformance))
         {
             int w = 1920;
             int h = 1080;
@@ -294,7 +312,7 @@ namespace Tests
                 initial.Velocities[i] *= ef;
             }
 
-            return TestSimulation(initial, new RK4<BallCloud, BallCloudGradient>(), string.Format("cloud{0}.avi", n), w, h, scale, fps, stepSize, visualDuration, simulatedDuration, assertFPS);
+            return TestSimulation(initial, new RK4<BallCloud, BallCloudGradient>(), string.Format("cloud{0}.avi", n), w, h, scale, fps, stepSize, visualDuration, simulatedDuration, expectedPerformance);
         }
 
         /// <summary>
@@ -369,16 +387,18 @@ namespace Tests
             // For each known machine, we have a set of benchmark tuples (n, f),
             // where n is a number of particles and f is the number of frames per second
             // at which this machine should be able to render the simulation
-            var benchmarks = new Dictionary<MachineInfo, List<Tuple<int, double>>>();
+            var benchmarks = new Dictionary<MachineInfo, List<(int, double, double, double)>>();
 
             var laptop = new MachineInfo("gereon-laptop.gereon", 3000000, 4, (long)8049484 * 1024, OperatingSystem.Linux);
-            benchmarks[laptop] = new List<Tuple<int, double>>();
-            benchmarks[laptop].Add(Tuple.Create(1, 8.5));
-            benchmarks[laptop].Add(Tuple.Create(10, 8.5));
-            benchmarks[laptop].Add(Tuple.Create(100, 7.5));
-            benchmarks[laptop].Add(Tuple.Create(500, 2.5));
-            benchmarks[laptop].Add(Tuple.Create(750, 1.25));
+            benchmarks[laptop] = new List<(int, double, double, double)>();
+            benchmarks[laptop].Add((1, 1750, 7.5, 3.75));
+            benchmarks[laptop].Add((10, 1400, 8, 3.75));
+            benchmarks[laptop].Add((100, 100, 7, 4.0));
+            benchmarks[laptop].Add((250, 15, 6, 6.0));
+            benchmarks[laptop].Add((500, 4, 5, 11.0));
+            benchmarks[laptop].Add((750, 2, 4, 19));
 
+            /*
             var officeMachine = new MachineInfo("baraddur.cs.uni-saarland.de", 4000000, 8, (long)33604718592, OperatingSystem.Linux);
             benchmarks[officeMachine] = new List<Tuple<int, double>>();
             benchmarks[officeMachine].Add(Tuple.Create(1, 11.25));
@@ -386,7 +406,8 @@ namespace Tests
             benchmarks[officeMachine].Add(Tuple.Create(100, 9.25));
             benchmarks[officeMachine].Add(Tuple.Create(500, 2.0));
             benchmarks[officeMachine].Add(Tuple.Create(750, 1.0));
-
+            */
+            /*
             var desktopMachine = new MachineInfo("gereon-desktop", 3800000, 12, (long)67465666560, OperatingSystem.Linux);
             benchmarks[desktopMachine] = new List<Tuple<int, double>>();
             benchmarks[desktopMachine].Add(Tuple.Create(1, 24.0));
@@ -394,11 +415,12 @@ namespace Tests
             benchmarks[desktopMachine].Add(Tuple.Create(100, 20.0));
             benchmarks[desktopMachine].Add(Tuple.Create(500, 4.0));
             benchmarks[desktopMachine].Add(Tuple.Create(750, 2.0));
+            */
 
             var rm = MachineInfo.GetRunning();
 
             foreach (var bm in benchmarks[rm])
-                yield return new object[] { bm.Item1, bm.Item2 };
+                yield return new object[] { bm.Item1, bm.Item2, bm.Item3, bm.Item4 };
         }
 
         /// <summary>
@@ -406,9 +428,13 @@ namespace Tests
         /// and asserts that the machine is able to render at least 10 frames per second for a random
         /// cloud with this many particles.
         /// </summary>
+        /// <param name="n">The number of particles to intialize the simulation with.</param>
+        /// <param name="sps">The expected rate at which simulation steps can be computed on the executing machine.</param>
+        /// <param name="rps">The expected rate at which frames can be rendered on the executing machine.</param>
+        /// <param name="T">The expected total time the test should take on the executing machine.</param>
         [Theory()]
         [MemberData(nameof(EnumerateBenchmarks))]
-        public void TestPerformance(int n, double rfps)
+        public void TestPerformance(int n, double sps, double rps, double T)
         {
             var m = 7.342E22; // Mass of the moon
             var r = 15 * 1737100.0; // Multiple of the radius of the moon
@@ -417,7 +443,12 @@ namespace Tests
             var d = 1 * 3600.0; // 1 hour
             var D = 1 * 86400.0; // 1 day
 
-            TestRandomCloud(n, s, n * m, r, n * 0.5 * m * v * v, d, D, rfps);
+            var sRate = TimeFraction.FromRate(sps);
+            var rRate = TimeFraction.FromRate(rps);
+
+            var expectedPerformance = new TestPerformance(sRate, rRate, T);
+
+            TestRandomCloud(n, s, n * m, r, n * 0.5 * m * v * v, d, D, expectedPerformance);
         }
     }
 }
