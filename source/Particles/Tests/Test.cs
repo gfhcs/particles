@@ -89,7 +89,7 @@ namespace Tests
 
             var dt = (simulatedDuration / visualDuration) / fps;
 
-            var renderer = new BallCloudRenderer(w, h, scale);
+
 
             var performance = new TestPerformance();
             DateTime startTime = DateTime.Now;
@@ -97,6 +97,7 @@ namespace Tests
             var expectedSPS = expectedPerformance.SimulationTime.Rate;
             var expectedRPS = expectedPerformance.RenderingTime.Rate;
 
+            using (var renderer = new BallCloudRenderer(w, h, scale))
             using (var vw = new VideoWriter(file, VideoCodec.H264, w, h, fps))
             {
                 var sim = new Simulation<BallCloud, BallCloudGradient>(state, integrator, stepSize);

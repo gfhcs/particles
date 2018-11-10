@@ -1,4 +1,4 @@
-Optimization: Renderer-Klasse herausfaktorisieren. Die sollte nicht dauernd ein neues Graphics-Objekt erzeugen
+Optimization: Können wir das Append beschleunigen?
 Optimization: Es soll zwei Tasks geben:
     1. Der Simulation-Task zieht einen State nach dem andern aus der Simulation und hängt sie an eine BlockingQueue an. Deren Kapazität sollte man sinnvoll begrenzen.
     2. Der Render-Task zieht so lange States aus der BlockingQueue, bis der Simulation-Task terminiert und die BlockingQueue leer ist. Er rendert das VideoCodec
