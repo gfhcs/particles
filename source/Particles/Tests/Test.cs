@@ -398,6 +398,15 @@ namespace Tests
             benchmarks[laptop].Add((500, 4, 5, 11.0));
             benchmarks[laptop].Add((750, 2, 4, 19));
 
+            var desktopMachine = new MachineInfo("gereon-desktop", 3800000, 12, (long)67465666560, OperatingSystem.Linux);
+            benchmarks[desktopMachine] = new List<(int, double, double, double)>();
+            benchmarks[desktopMachine].Add((1, 7000, 21, 1.5));
+            benchmarks[desktopMachine].Add((10, 4250, 21, 1.5));
+            benchmarks[desktopMachine].Add((100, 135, 20, 1.75));
+            benchmarks[desktopMachine].Add((250, 22, 17, 3.0));
+            benchmarks[desktopMachine].Add((500, 5.0, 12.5, 7.0));
+            benchmarks[desktopMachine].Add((750, 2.0, 8.5, 13.5));
+
             /*
             var officeMachine = new MachineInfo("baraddur.cs.uni-saarland.de", 4000000, 8, (long)33604718592, OperatingSystem.Linux);
             benchmarks[officeMachine] = new List<Tuple<int, double>>();
@@ -406,15 +415,6 @@ namespace Tests
             benchmarks[officeMachine].Add(Tuple.Create(100, 9.25));
             benchmarks[officeMachine].Add(Tuple.Create(500, 2.0));
             benchmarks[officeMachine].Add(Tuple.Create(750, 1.0));
-            */
-            /*
-            var desktopMachine = new MachineInfo("gereon-desktop", 3800000, 12, (long)67465666560, OperatingSystem.Linux);
-            benchmarks[desktopMachine] = new List<Tuple<int, double>>();
-            benchmarks[desktopMachine].Add(Tuple.Create(1, 24.0));
-            benchmarks[desktopMachine].Add(Tuple.Create(10, 24.0));
-            benchmarks[desktopMachine].Add(Tuple.Create(100, 20.0));
-            benchmarks[desktopMachine].Add(Tuple.Create(500, 4.0));
-            benchmarks[desktopMachine].Add(Tuple.Create(750, 2.0));
             */
 
             var rm = MachineInfo.GetRunning();
