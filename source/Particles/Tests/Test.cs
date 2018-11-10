@@ -138,7 +138,7 @@ namespace Tests
 
                     var t = (DateTime.Now - startTime).TotalSeconds;
 
-                    if (performance.SimulationTime.StepCount >= 3){
+                    if (performance.SimulationTime.StepCount >= 10){
 
                         var sps = performance.SimulationTime.Rate;
                         var rps = performance.RenderingTime.Rate;
@@ -448,7 +448,7 @@ namespace Tests
 
             var expectedPerformance = new TestPerformance(sRate, rRate, T);
 
-            TestRandomCloud(n, s, n * m, r, n * 0.5 * m * v * v, d, D, expectedPerformance);
+            Console.WriteLine(TestRandomCloud(n, s, n * m, r, n * 0.5 * m * v * v, d, D, expectedPerformance));
         }
     }
 }

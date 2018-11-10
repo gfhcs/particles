@@ -105,5 +105,10 @@ namespace Tests
         {
             return this.time.Equals(other.time) && this.stepCount.Equals(other.stepCount);
         }
+
+        public override string ToString()
+        {
+            return string.Format("{0} steps in {1}s", stepCount, time);
+        }
     }
 }

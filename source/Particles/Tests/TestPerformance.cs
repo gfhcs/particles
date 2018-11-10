@@ -89,5 +89,10 @@ namespace Tests
         {
             return new TestPerformance(this.simulationTime, this.renderingTime, this.totalTime + t);
         }
+
+        public override string ToString()
+        {
+            return string.Format("{0}sps, {1}rps, {2}s in total", simulationTime.Rate, renderingTime.Rate, totalTime);
+        }
     }
 }
