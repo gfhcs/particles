@@ -143,8 +143,8 @@ namespace Tests
                         var sps = performance.SimulationTime.Rate;
                         var rps = performance.RenderingTime.Rate;
 
-                        Assert.True(sps >= expectedSPS, string.Format("Can only simulate {0} steps per second, but expected at least {1}!", sps, expectedSPS));
-                        Assert.True(rps >= expectedRPS, string.Format("Can only render {0} frames per second, but expected at least {1}!", rps, expectedRPS));
+                        Assert.True(double.IsNaN(expectedSPS) || sps >= expectedSPS, string.Format("Can only simulate {0} steps per second, but expected at least {1}!", sps, expectedSPS));
+                        Assert.True(double.IsNaN(expectedRPS) || rps >= expectedRPS, string.Format("Can only render {0} frames per second, but expected at least {1}!", rps, expectedRPS));
                     }
 
                     simulationWatch.Restart();
@@ -155,7 +155,7 @@ namespace Tests
 
             performance = performance.AddTotalTime((DateTime.Now - startTime).TotalSeconds);
 
-            Assert.True(performance.TotalTime <= expectedPerformance.TotalTime, string.Format("The test case used {0} seconds, but was expected to take at most {1} seconds.", performance.TotalTime, expectedPerformance.TotalTime));
+            Assert.True(expectedPerformance.TotalTime == 0 || performance.TotalTime <= expectedPerformance.TotalTime, string.Format("The test case used {0} seconds, but was expected to take at most {1} seconds.", performance.TotalTime, expectedPerformance.TotalTime));
 
             vlc(path);
             return performance;
