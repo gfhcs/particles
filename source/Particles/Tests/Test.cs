@@ -368,12 +368,12 @@ namespace Tests
 
             var laptop = new MachineInfo("gereon-laptop.gereon", 3000000, 4, (long)8049484 * 1024, OperatingSystem.Linux);
             benchmarks[laptop] = new List<(int, double, double, double)>();
-            benchmarks[laptop].Add((1, 1750, 7.5, 3.75));
+            benchmarks[laptop].Add((1, 1750, 8, 3.75));
             benchmarks[laptop].Add((10, 1400, 8, 3.75));
-            benchmarks[laptop].Add((100, 100, 7, 4.0));
-            benchmarks[laptop].Add((250, 15, 6, 6.0));
-            benchmarks[laptop].Add((500, 4, 5, 11.0));
-            benchmarks[laptop].Add((750, 2, 4, 19));
+            benchmarks[laptop].Add((100, 100, 7.5, 4.0));
+            benchmarks[laptop].Add((250, 15, 7.5, 5.5));
+            benchmarks[laptop].Add((500, 4, 7.0, 10));
+            benchmarks[laptop].Add((750, 2, 6.5, 17));
 
             var desktopMachine = new MachineInfo("gereon-desktop", 3800000, 12, (long)67465666560, OperatingSystem.Linux);
             benchmarks[desktopMachine] = new List<(int, double, double, double)>();
