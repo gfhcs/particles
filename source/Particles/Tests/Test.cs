@@ -89,8 +89,6 @@ namespace Tests
 
             var dt = (simulatedDuration / visualDuration) / fps;
 
-
-
             var performance = new TestPerformance();
             DateTime startTime = DateTime.Now;
 
@@ -369,12 +367,12 @@ namespace Tests
 
             var laptop = new MachineInfo("gereon-laptop.gereon", 3000000, 4, (long)8049484 * 1024, OperatingSystem.Linux);
             benchmarks[laptop] = new List<(int, double, double, double)>();
-            benchmarks[laptop].Add((1, 1750, 8, 3.75));
-            benchmarks[laptop].Add((10, 1400, 8, 3.75));
-            benchmarks[laptop].Add((100, 100, 7.5, 4.0));
-            benchmarks[laptop].Add((250, 15, 7.5, 5.5));
-            benchmarks[laptop].Add((500, 4, 7.0, 10));
-            benchmarks[laptop].Add((750, 2, 6.5, 17));
+            benchmarks[laptop].Add((1, 1750, 60, 1));
+            benchmarks[laptop].Add((10, 1400, 55, 1.1));
+            benchmarks[laptop].Add((100, 95, 55, 1.5));
+            benchmarks[laptop].Add((250, 15, 50, 2.5));
+            benchmarks[laptop].Add((500, 4, 45, 7.0));
+            benchmarks[laptop].Add((750, 1.9, 42.5, 14));
 
             var desktopMachine = new MachineInfo("gereon-desktop", 3800000, 12, (long)67465666560, OperatingSystem.Linux);
             benchmarks[desktopMachine] = new List<(int, double, double, double)>();
@@ -426,7 +424,7 @@ namespace Tests
 
             var expectedPerformance = new TestPerformance(sRate, rRate, T);
 
-            Console.WriteLine(TestRandomCloud(n, s, n * m, r, n * 0.5 * m * v * v, d, D, expectedPerformance));
+            TestRandomCloud(n, s, n * m, r, n * 0.5 * m * v * v, d, D, expectedPerformance);
         }
     }
 }

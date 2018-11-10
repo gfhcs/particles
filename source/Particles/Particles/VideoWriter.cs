@@ -130,7 +130,7 @@ namespace Particles
         {
             if (frame.Size != this.Resolution)
                 throw new ArgumentException(string.Format("Cannot add a frame of resolution {0}x{1} to a video with resolution {2}x{3} !", frame.Width, frame.Height, width, height));
-            frame.Save(ffmpeg.StandardInput.BaseStream, ImageFormat.Png);
+            frame.Save(ffmpeg.StandardInput.BaseStream, ImageFormat.Jpeg);
         }
 
         /// <summary>
