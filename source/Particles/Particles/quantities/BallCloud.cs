@@ -136,7 +136,7 @@ namespace Particles
             // dm and dv are already filled with zeros.
             Array.Copy(c.Velocities, this.velocities, n);
 
-            // Compute graviational accelerations:
+            // Compute gravitational accelerations:
             for (int i = 0; i < n; i++)
                 for (int j = 0; j < n; j++) {
                     if (i == j) continue;
