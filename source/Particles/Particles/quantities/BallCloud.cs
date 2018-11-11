@@ -138,8 +138,12 @@ namespace Particles
 
             // Compute gravitational accelerations:
             for (int i = 0; i < n; i++)
-                for (int j = 0; j < n; j++) {
-                    if (i == j) continue;
+            {
+                var m1 = c.Masses[i];
+
+                for (int j = i + 1; j < n; j++)
+                {
+                    var m2 = c.Masses[j];
 
                     var r = c.Positions[j] - c.Positions[i];
 
@@ -152,8 +156,12 @@ namespace Particles
                     var alpha = Math.Atan(c.Radii[j] / d);
                     var beta = Math.Atan(c.Radii[i] / d);
 
-                    accelerations[i] += (r / d) * G * Math.Cos(alpha) * Math.Cos(beta) * c.Masses[j] / (d * d);
+                    var F = (r / d) * G * Math.Cos(alpha) * Math.Cos(beta) * m1 * m2 / (d * d);
+
+                    accelerations[i] += F / m1;
+                    accelerations[j] -= F / m2;
                 }
+            }
         }
 
         public BallCloudGradient(BallCloud a, double dt, BallCloud b) : this(a.Positions.Length)
