@@ -73,14 +73,14 @@ namespace Tests
         private TestPerformance TestSimulation(BallCloud initialState,
                                           IIntegrator<BallCloud, BallCloudGradient> integrator,
                                           string fileName,
-                                          int w=800,
-                                          int h=600,
+                                          int w = 800,
+                                          int h = 600,
                                           double scale = 0.5 * (1.0 / 149597870700) * 600,
-                                          double fps=25,
+                                          double fps = 25,
                                           double stepSize = 86400,
-                                          double visualDuration=60.0, 
-                                          double simulatedDuration=365*86400,
-                                          TestPerformance expectedPerformance=default(TestPerformance))
+                                          double visualDuration = 60.0,
+                                          double simulatedDuration = 365 * 86400,
+                                          TestPerformance expectedPerformance = default(TestPerformance))
         {
             var path = string.Format("/tmp/{0}", fileName);
             var file = new FileStream(path, FileMode.Create);
