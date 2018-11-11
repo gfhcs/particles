@@ -6,6 +6,8 @@ using System.Drawing;
 using System.Diagnostics;
 using System.Linq;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
+using System.Threading.Tasks;
 
 namespace Tests
 {
@@ -51,9 +53,6 @@ namespace Tests
             }
         }
 
-
-
-
         /// <summary>
         /// Runs a simulation and plays back its rendering.
         /// </summary>
@@ -70,7 +69,7 @@ namespace Tests
         /// <param name="expectedPerformance">
         /// The expected performance of the test case on the executing machine.
         /// </param>
-        private TestPerformance TestSimulation(BallCloud initialState,
+        private async Task<TestPerformance> TestSimulation(BallCloud initialState,
                                           IIntegrator<BallCloud, BallCloudGradient> integrator,
                                           string fileName,
                                           int w = 800,
@@ -90,46 +89,91 @@ namespace Tests
             var dt = (simulatedDuration / visualDuration) / fps;
 
             var performance = new TestPerformance();
-            DateTime startTime = DateTime.Now;
 
             var expectedSPS = expectedPerformance.SimulationTime.Rate;
             var expectedRPS = expectedPerformance.RenderingTime.Rate;
 
-            using (var renderer = new BallCloudRenderer(w, h, scale))
-            using (var vw = new VideoWriter(file, VideoCodec.H264, w, h, fps))
+            var mutex = new object();
+
+            var stateBuffer = new BlockingCollection<BallCloud>();
+
+            var totalTime = Stopwatch.StartNew();
+
+            var simulation = Task.Run(() =>
             {
+                var watch = Stopwatch.StartNew();
+
                 var sim = new Simulation<BallCloud, BallCloudGradient>(state, integrator, stepSize);
-               
-                var simulationWatch = Stopwatch.StartNew();
-                var renderingWatch = new Stopwatch();
 
-                for (;sim.Time < simulatedDuration; sim.Advance(dt))
+                stateBuffer.Add(sim.State);
+
+                int stepCount = 0;
+                try
                 {
-                    simulationWatch.Stop();
-                    renderingWatch.Restart();
-                    vw.Append(renderer.Render(sim.State));
-                    renderingWatch.Stop();
+                    while (sim.Time < simulatedDuration)
+                    {
+                        watch.Restart();
+                        sim.Advance(dt);
+                        watch.Stop();
+                        stepCount++;
+                        stateBuffer.Add(sim.State);
 
-                    performance = performance.Add(new TestPerformance(new TimeFraction(simulationWatch.Elapsed.TotalSeconds), new TimeFraction(renderingWatch.Elapsed.TotalSeconds), 0));
-
-                    var t = (DateTime.Now - startTime).TotalSeconds;
-
-                    if (performance.SimulationTime.StepCount >= 10){
-
-                        var sps = performance.SimulationTime.Rate;
-                        var rps = performance.RenderingTime.Rate;
-
-                        Assert.True(double.IsNaN(expectedSPS) || sps >= expectedSPS, string.Format("Can only simulate {0} steps per second, but expected at least {1}!", sps, expectedSPS));
-                        Assert.True(double.IsNaN(expectedRPS) || rps >= expectedRPS, string.Format("Can only render {0} frames per second, but expected at least {1}!", rps, expectedRPS));
+                        lock (mutex)
+                        {
+                            performance = performance.AddSimulationSteps(new TimeFraction(watch.Elapsed.TotalSeconds));
+                            if (stepCount >= 10 || !(sim.Time < simulatedDuration))
+                            {
+                                var sps = performance.SimulationTime.Rate;
+                                Assert.True(double.IsNaN(expectedSPS) || sps >= expectedSPS, string.Format("Can only simulate {0} steps per second, but expected at least {1}!", sps, expectedSPS));
+                            }
+                        }
                     }
-
-                    simulationWatch.Restart();
                 }
+                finally
+                {
+                    stateBuffer.CompleteAdding();
+                }
+            });
 
-                simulationWatch.Stop();
-            }
+            var rendering = Task.Run(() =>
+            {
+                var watch = new Stopwatch();
+                var stepCount = 0;
+                using (var renderer = new BallCloudRenderer(w, h, scale))
+                using (var vw = new VideoWriter(file, VideoCodec.H264, w, h, fps))
+                {
+                    try
+                    {
+                        while (!stateBuffer.IsCompleted)
+                        {
+                            var c = stateBuffer.Take();
+                            watch.Restart();
+                            vw.Append(renderer.Render(c));
+                            watch.Stop();
+                            stepCount++;
 
-            performance = performance.AddTotalTime((DateTime.Now - startTime).TotalSeconds);
+                            lock (mutex)
+                            {
+                                performance = performance.AddRenderingSteps(new TimeFraction(watch.Elapsed.TotalSeconds));
+
+                                if (stepCount >= 10 || stateBuffer.IsCompleted)
+                                {
+                                    var rps = performance.RenderingTime.Rate;
+                                    Assert.True(double.IsNaN(expectedRPS) || rps >= expectedRPS, string.Format("Can only render {0} frames per second, but expected at least {1}!", rps, expectedRPS));
+                                }
+                            }
+                        }
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        // This happens if stateBuffer.CompleteAdding is called between our check to IsCompleted and our call to Take.
+                    }
+                }
+            });
+
+            await rendering;
+
+            performance = performance.AddTotalTime(totalTime.Elapsed.TotalSeconds);
 
             Assert.True(expectedPerformance.TotalTime == 0 || performance.TotalTime <= expectedPerformance.TotalTime, string.Format("The test case used {0} seconds, but was expected to take at most {1} seconds.", performance.TotalTime, expectedPerformance.TotalTime));
 
@@ -250,7 +294,7 @@ namespace Tests
         /// <param name="expectedPerformance">
         /// The expected performance of the test case on the executing machine.
         /// </param>
-        TestPerformance TestRandomCloud(int n, double size, double mass, double radius, double internalEnergy, double stepSize, double simulatedDuration, TestPerformance expectedPerformance = default(TestPerformance))
+        Task<TestPerformance> TestRandomCloud(int n, double size, double mass, double radius, double internalEnergy, double stepSize, double simulatedDuration, TestPerformance expectedPerformance = default(TestPerformance))
         {
             int w = 1920;
             int h = 1080;
@@ -410,7 +454,7 @@ namespace Tests
         /// <param name="T">The expected total time the test should take on the executing machine.</param>
         [Theory()]
         [MemberData(nameof(EnumerateBenchmarks))]
-        public void TestPerformance(int n, double sps, double rps, double T)
+        public async Task TestPerformance(int n, double sps, double rps, double T)
         {
             var m = 7.342E22; // Mass of the moon
             var r = 15 * 1737100.0; // Multiple of the radius of the moon
@@ -424,7 +468,7 @@ namespace Tests
 
             var expectedPerformance = new TestPerformance(sRate, rRate, T);
 
-            TestRandomCloud(n, s, n * m, r, n * 0.5 * m * v * v, d, D, expectedPerformance);
+            await TestRandomCloud(n, s, n * m, r, n * 0.5 * m * v * v, d, D, expectedPerformance);
         }
     }
 }

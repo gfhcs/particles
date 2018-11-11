@@ -1,6 +1,3 @@
-Optimization: Es soll zwei Tasks geben:
-    1. Der Simulation-Task zieht einen State nach dem andern aus der Simulation und hängt sie an eine BlockingQueue an. Deren Kapazität sollte man sinnvoll begrenzen.
-    2. Der Render-Task zieht so lange States aus der BlockingQueue, bis der Simulation-Task terminiert und die BlockingQueue leer ist. Er rendert das VideoCodec
 Optimization: Der Renderer könnte das Bild in 1 Abschnitt pro Prozessor aufspalten. Dann rendert jeder Prozessor einen Abschnitt und zum Schluss werden die Abschnitte aneinander gefügt. Zum Beispiel könnte man die Z-Achse in Abschnitte unterteilen
     --> Ich will, dass das Rendering deutlich schneller geht, als das Simulieren
 Optimization: Parallelisieren mit Tasks!
