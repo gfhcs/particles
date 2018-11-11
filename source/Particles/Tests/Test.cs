@@ -171,6 +171,7 @@ namespace Tests
                 }
             });
 
+            await simulation;
             await rendering;
 
             performance = performance.AddTotalTime(totalTime.Elapsed.TotalSeconds);
@@ -411,12 +412,12 @@ namespace Tests
 
             var laptop = new MachineInfo("gereon-laptop.gereon", 3000000, 4, (long)8049484 * 1024, OperatingSystem.Linux);
             benchmarks[laptop] = new List<(int, double, double, double)>();
-            benchmarks[laptop].Add((1, 5200, 60, 0.95));
-            benchmarks[laptop].Add((10, 3600, 55, 0.95));
-            benchmarks[laptop].Add((100, 170, 55, 1.2));
-            benchmarks[laptop].Add((250, 28.5, 50, 2.0));
-            benchmarks[laptop].Add((500, 7.25, 45, 4.75));
-            benchmarks[laptop].Add((750, 3.25, 42.5, 8.85));
+            benchmarks[laptop].Add((1, 3450, 50, 1.0));
+            benchmarks[laptop].Add((10, 2450, 50, 1.0));
+            benchmarks[laptop].Add((100, 115, 44, 1.1));
+            benchmarks[laptop].Add((250, 24, 44, 1.5));
+            benchmarks[laptop].Add((500, 6.5, 30, 4.25));
+            benchmarks[laptop].Add((750, 3, 30, 8.5));
 
             var desktopMachine = new MachineInfo("gereon-desktop", 3800000, 12, (long)67465666560, OperatingSystem.Linux);
             benchmarks[desktopMachine] = new List<(int, double, double, double)>();
