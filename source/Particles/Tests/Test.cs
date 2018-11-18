@@ -135,7 +135,7 @@ namespace Tests
                 }
             });
 
-            var rendering = Task.Run(() =>
+            var rendering = Task.Run(async () =>
             {
                 var watch = new Stopwatch();
                 var stepCount = 0;
@@ -148,7 +148,7 @@ namespace Tests
                         {
                             var c = stateBuffer.Take();
                             watch.Restart();
-                            vw.Append(renderer.Render(c));
+                            vw.Append(await renderer.Render(c));
                             watch.Stop();
                             stepCount++;
 

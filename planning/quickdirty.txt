@@ -1,6 +1,4 @@
-Optimization: Der Renderer könnte das Bild in 1 Abschnitt pro Prozessor aufspalten. Dann rendert jeder Prozessor einen Abschnitt und zum Schluss werden die Abschnitte aneinander gefügt. Zum Beispiel könnte man die Z-Achse in Abschnitte unterteilen
-    --> Ich will, dass das Rendering deutlich schneller geht, als das Simulieren
-Optimization: Parallelisieren mit Tasks!
+Optimization: Simulation mit Tasks parallelisieren: Idee: Um weiterhin die Symmetrie der Gravitation ausnutzen zu können, teil man die Partikel in Blöcke ein. Jeder Block hat ein Lock. Wer auf einem Block lesen oder schreiben will, braucht das Lock auf diesen Block. ACHTUNG: Das funktioniert nur dann gut, wenn wir das Lock durch einen Task ersetzen! Das geht mit TaskCompletionSource
 Optimization: Barnes-Hut!
 Optimization: Embedded Runge-Kutta
 Optimization: Separate step sizes for each particle
