@@ -88,7 +88,7 @@ namespace Particles
 
             g.Clear(Color.Black); // Black is transparency for bmp.
 
-            for (int i = Math.Max(0, startIndex); i < Math.Min(startIndex + count, positions.Length); i++)
+            for (int i = startIndex; i < Math.Min(startIndex + count, positions.Length); i++)
             {
                 var p = scale * positions[i];
                 var r = Math.Max(1, (int)(scale * radii[i]));
@@ -104,7 +104,7 @@ namespace Particles
 
             var stride = 2;
 
-            while (tid % stride == 0 && tid + stride / 2 < tasks.Length)
+            while (tid % stride == 0 && tid + stride / 2 < tasks.Length && tasks[tid + stride / 2] != null)
             {
                 await tasks[tid + stride / 2];
                 g.DrawImageUnscaled(bitmaps[tid + stride / 2], 0, 0);
@@ -125,28 +125,35 @@ namespace Particles
             var N = c.Positions.Length;
 
             // Sort particles by Z:
-            var ps = new Vector3[N];
-            var rs = new double[N];
-            Array.Copy(c.Positions, ps, N);
-            Array.Copy(c.Radii, rs, N);
-            Array.Sort(ps, rs, ZComparer.Instance);
+            if (positions == null || positions.Length != N)
+            {
+                positions = new Vector3[N];
+                radii = new double[N];
+            }
+            Array.Copy(c.Positions, positions, N);
+            Array.Copy(c.Radii, radii, N);
+            Array.Sort(positions, radii, ZComparer.Instance);
 
             // Launch tasks:
             var pc = Environment.ProcessorCount;
 
-            var bpp = Math.Max(64, N / pc);
-            var abpp = N % bpp;
+            var bpp = Math.Min(N, Math.Max(64, N / pc));
+            var abpp = bpp < N ? N % bpp : 0;
 
             var count = bpp + abpp;
 
-            int tid = 0;
+            int tid = pc - 1;
             for (int i = N - count; i >= 0; i -= count)
             {
-                tasks[i] = render(tid--, i, count);
+                tasks[tid] = render(tid, i, count);
                 count = bpp;
+                tid--;
             }
 
             await tasks[0];
+
+            for (int i = 0; i < tasks.Length; i++)
+                tasks[i] = null;
 
             lock (this)
             {
