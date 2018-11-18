@@ -183,7 +183,7 @@ namespace Tests
         }
 
         [Fact()]
-        public void TestEarthMoon()
+        public async Task TestEarthMoon()
         {
             var fileName = "testEarthMoon.avi";
 
@@ -210,7 +210,7 @@ namespace Tests
             state.Radii[0] = 6371000.0;
             state.Radii[1] = 1737100.0;
 
-            TestSimulation(state, new RK4<BallCloud, BallCloudGradient>(), fileName, w, h, scale, fps, stepSize, visualDuration, simulatedDuration);
+            await TestSimulation(state, new RK4<BallCloud, BallCloudGradient>(), fileName, w, h, scale, fps, stepSize, visualDuration, simulatedDuration);
         }
 
         RandomVector rndv = new RandomVector(new Random());
@@ -340,7 +340,7 @@ namespace Tests
         /// A minimal random cloud, of two particles.
         /// </summary>
         [Fact()]
-        public void TestBinaryOscillation()
+        public async Task TestBinaryOscillation()
         {
             var fileName = "testBinaryOscillation.avi";
 
@@ -364,7 +364,7 @@ namespace Tests
             state.Radii[0] = 10 * 6371000.0;
             state.Radii[1] = 10 * 1737100.0;
 
-            TestSimulation(state, new RK4<BallCloud, BallCloudGradient>(), fileName, w, h, scale, fps, stepSize, visualDuration, simulatedDuration);
+            await TestSimulation(state, new RK4<BallCloud, BallCloudGradient>(), fileName, w, h, scale, fps, stepSize, visualDuration, simulatedDuration);
         }
 
 
