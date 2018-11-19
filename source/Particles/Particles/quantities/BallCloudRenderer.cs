@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using System.Drawing;
 using System.Collections.Generic;
 using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
 
 namespace Particles
 {
@@ -22,6 +23,8 @@ namespace Particles
         private readonly Graphics[] graphics;
         private readonly Task[] tasks;
 
+        private readonly Color transparent = Color.FromArgb(0, 0, 0, 0);
+
         public BallCloudRenderer(int width, int height, double scale)
         {
             this.scale = scale;
@@ -34,10 +37,10 @@ namespace Particles
             this.graphics = new Graphics[pc];
             this.tasks = new Task[pc];
             for (var i = 0; i < pc; i++){
-                var bmp = new Bitmap(width, height);
-                bmp.MakeTransparent(Color.Black);
+                var bmp = new Bitmap(width, height, PixelFormat.Format32bppArgb);
                 var g = Graphics.FromImage(bmp);
                 g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+                g.CompositingMode = CompositingMode.SourceOver;
                 bitmaps[i] = bmp;
                 graphics[i] = g;
             }
@@ -86,7 +89,7 @@ namespace Particles
             var bmp = bitmaps[tid];
             var g = graphics[tid];
 
-            g.Clear(Color.Black); // Black is transparency for bmp.
+            g.Clear(tid == 0 ? Color.Black : transparent);
 
             for (int i = startIndex; i < Math.Min(startIndex + count, positions.Length); i++)
             {
