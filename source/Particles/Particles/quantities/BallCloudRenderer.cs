@@ -84,14 +84,14 @@ namespace Particles
             }
         }
 
-        private async Task render(int tid, int startIndex, int count)
+        private async Task render(int nc, int tid, int startIndex, int count)
         {
             var bmp = bitmaps[tid];
             var g = graphics[tid];
 
             g.Clear(tid == 0 ? Color.Black : transparent);
 
-            for (int i = startIndex; i < Math.Min(startIndex + count, positions.Length); i++)
+            for (int i = startIndex; i < startIndex + count; i++)
             {
                 var p = scale * positions[i];
                 var r = Math.Max(1, (int)(scale * radii[i]));
@@ -107,7 +107,7 @@ namespace Particles
 
             var stride = 2;
 
-            while (tid % stride == 0 && tid + stride / 2 < tasks.Length && tasks[tid + stride / 2] != null)
+            while (tid % stride == 0 && tid + stride / 2 < nc)
             {
                 await tasks[tid + stride / 2];
                 g.DrawImageUnscaled(bitmaps[tid + stride / 2], 0, 0);
@@ -141,22 +141,20 @@ namespace Particles
             var pc = Environment.ProcessorCount;
 
             var bpp = Math.Min(N, Math.Max(64, N / pc));
-            var abpp = bpp < N ? N % bpp : 0;
 
-            var count = bpp + abpp;
+            var tc = bpp > 0 ? N / bpp : 1;
 
-            int tid = pc - 1;
-            for (int i = N - count; i >= 0; i -= count)
+            var count = bpp + N % bpp;
+            var i = N - count;
+
+            for (int tid = tc - 1; tid >= 0; tid--)
             {
-                tasks[tid] = render(tid, i, count);
+                tasks[tid] = render(tc, tid, i, count);
                 count = bpp;
-                tid--;
+                i -= bpp;
             }
 
             await tasks[0];
-
-            for (int i = 0; i < tasks.Length; i++)
-                tasks[i] = null;
 
             lock (this)
             {
