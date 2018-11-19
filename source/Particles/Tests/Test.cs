@@ -39,10 +39,10 @@ namespace Tests
                     }
             }
 
-            vlc(path);
+            showVideo(path);
         }
 
-        private static void vlc(string path)
+        private static void showVideo(string path)
         {
             var args = "--no-one-instance --no-qt-error-dialogs {0} vlc://quit";
             var vlcInfo = new ProcessStartInfo("vlc", string.Format(args, path));
@@ -178,7 +178,7 @@ namespace Tests
 
             Assert.True(expectedPerformance.TotalTime == 0 || performance.TotalTime <= expectedPerformance.TotalTime, string.Format("The test case used {0} seconds, but was expected to take at most {1} seconds.", performance.TotalTime, expectedPerformance.TotalTime));
 
-            vlc(path);
+            showVideo(path);
             return performance;
         }
 
@@ -234,9 +234,14 @@ namespace Tests
                 }
             }
 
-            var path = "/tmp/disksampletest.png";
+            showImage(bitmap);
+        }
 
-            bitmap.Save(path);
+        private void showImage(Image img)
+        {
+            var path = "/tmp/image.png";
+
+            img.Save(path);
 
             var gwenview = new ProcessStartInfo("gwenview", path);
 
@@ -281,7 +286,7 @@ namespace Tests
                     vw.Append(bitmap);
                 }
 
-            vlc(path);
+            showVideo(path);
         }
 
         /// <summary>
