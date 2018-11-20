@@ -419,10 +419,11 @@ namespace Tests
             benchmarks[laptop] = new List<(int, double, double, double)>();
             benchmarks[laptop].Add((1, 3450, 50, 1.0));
             benchmarks[laptop].Add((10, 2450, 50, 1.0));
-            benchmarks[laptop].Add((100, 115, 44, 1.1));
-            benchmarks[laptop].Add((250, 24, 44, 1.5));
-            benchmarks[laptop].Add((500, 6.5, 30, 4.25));
-            benchmarks[laptop].Add((750, 3, 30, 8.5));
+            benchmarks[laptop].Add((100, 105, 47, 1.1));
+            benchmarks[laptop].Add((250, 20, 45, 1.5));
+            benchmarks[laptop].Add((500, 6.5, 45, 4.25));
+            benchmarks[laptop].Add((750, 3, 34, 8.5));
+            benchmarks[laptop].Add((1024, 1.5, 27.5, 15));
 
             var desktopMachine = new MachineInfo("gereon-desktop", 3800000, 12, (long)67465666560, OperatingSystem.Linux);
             benchmarks[desktopMachine] = new List<(int, double, double, double)>();

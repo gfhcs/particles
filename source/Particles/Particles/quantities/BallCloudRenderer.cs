@@ -143,7 +143,7 @@ namespace Particles
             // Launch tasks:
             var pc = Environment.ProcessorCount;
 
-            var bpp = Math.Min(N, Math.Max(64, N / pc));
+            var bpp = Math.Min(N, Math.Max(256, N / pc));
 
             var tc = bpp > 0 ? N / bpp : 1;
 
