@@ -427,12 +427,13 @@ namespace Tests
 
             var desktopMachine = new MachineInfo("gereon-desktop", 3800000, 12, (long)67465666560, OperatingSystem.Linux);
             benchmarks[desktopMachine] = new List<(int, double, double, double)>();
-            benchmarks[desktopMachine].Add((1, 7000, 21, 1.5));
-            benchmarks[desktopMachine].Add((10, 4250, 21, 1.5));
-            benchmarks[desktopMachine].Add((100, 135, 20, 1.75));
-            benchmarks[desktopMachine].Add((250, 22, 17, 3.0));
-            benchmarks[desktopMachine].Add((500, 5.0, 12.5, 7.0));
-            benchmarks[desktopMachine].Add((750, 2.0, 8.5, 13.5));
+            benchmarks[desktopMachine].Add((1, 3500, 60, 0.75));
+            benchmarks[desktopMachine].Add((10, 3000, 60, 0.75));
+            benchmarks[desktopMachine].Add((100, 150, 60, 0.75));
+            benchmarks[desktopMachine].Add((250, 25, 55, 1.1));
+            benchmarks[desktopMachine].Add((500, 8, 55, 3.5));
+            benchmarks[desktopMachine].Add((750, 3.5, 40, 7));
+            benchmarks[desktopMachine].Add((1024, 1.75, 29.5, 12));
 
             /*
             var officeMachine = new MachineInfo("baraddur.cs.uni-saarland.de", 4000000, 8, (long)33604718592, OperatingSystem.Linux);
