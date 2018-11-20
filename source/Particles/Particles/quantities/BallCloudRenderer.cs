@@ -84,36 +84,39 @@ namespace Particles
             }
         }
 
-        private async Task render(int nc, int tid, int startIndex, int count)
+        private Task render(int nc, int tid, int startIndex, int count)
         {
-            var bmp = bitmaps[tid];
-            var g = graphics[tid];
-
-            g.Clear(tid == 0 ? Color.Black : transparent);
-
-            for (int i = startIndex; i < startIndex + count; i++)
+            return Task.Run(async () =>
             {
-                var p = scale * positions[i];
-                var r = Math.Max(1, (int)(scale * radii[i]));
-                var x = bmp.Width / 2 + (int)(p.X);
-                var y = bmp.Height / 2 - (int)(p.Y);
+                var bmp = bitmaps[tid];
+                var g = graphics[tid];
 
-                var d = cameraZ - p.Z;
-                var b = Math.Min(255, (int)(255 * B / (d * d)));
+                g.Clear(tid == 0 ? Color.Black : transparent);
 
-                g.FillEllipse(GetBrush(b), x - r / 2, y - r / 2, r, r);
-            }
-            g.Flush(FlushIntention.Sync);
+                for (int i = startIndex; i < startIndex + count; i++)
+                {
+                    var p = scale * positions[i];
+                    var r = Math.Max(1, (int)(scale * radii[i]));
+                    var x = bmp.Width / 2 + (int)(p.X);
+                    var y = bmp.Height / 2 - (int)(p.Y);
 
-            var stride = 2;
+                    var d = cameraZ - p.Z;
+                    var b = Math.Min(255, (int)(255 * B / (d * d)));
 
-            while (tid % stride == 0 && tid + stride / 2 < nc)
-            {
-                await tasks[tid + stride / 2];
-                g.DrawImageUnscaled(bitmaps[tid + stride / 2], 0, 0);
+                    g.FillEllipse(GetBrush(b), x - r / 2, y - r / 2, r, r);
+                }
                 g.Flush(FlushIntention.Sync);
-                stride *= 2;
-            }
+
+                var stride = 2;
+
+                while (tid % stride == 0 && tid + stride / 2 < nc)
+                {
+                    await tasks[tid + stride / 2];
+                    g.DrawImageUnscaled(bitmaps[tid + stride / 2], 0, 0);
+                    g.Flush(FlushIntention.Sync);
+                    stride *= 2;
+                }
+            });
         }
 
         public async Task<Image> Render(BallCloud c)
