@@ -148,7 +148,7 @@ namespace Tests
                         {
                             var c = stateBuffer.Take();
                             watch.Restart();
-                            vw.Append(await renderer.Render(c));
+                            vw.Append(await renderer.Render(c).ConfigureAwait(false));
                             watch.Stop();
                             stepCount++;
 
@@ -171,8 +171,7 @@ namespace Tests
                 }
             });
 
-            await simulation;
-            await rendering;
+            await Task.WhenAll(simulation, rendering).ConfigureAwait(false);
 
             performance = performance.AddTotalTime(totalTime.Elapsed.TotalSeconds);
 

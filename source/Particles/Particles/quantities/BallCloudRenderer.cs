@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Collections.Generic;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
+using System.Linq;
 
 namespace Particles
 {
@@ -111,7 +112,7 @@ namespace Particles
 
                 while (tid % stride == 0 && tid + stride / 2 < nc)
                 {
-                    await tasks[tid + stride / 2];
+                    await tasks[tid + stride / 2].ConfigureAwait(false);
                     g.DrawImageUnscaled(bitmaps[tid + stride / 2], 0, 0);
                     g.Flush(FlushIntention.Sync);
                     stride *= 2;
@@ -157,7 +158,7 @@ namespace Particles
                 i -= bpp;
             }
 
-            await tasks[0];
+            await Task.WhenAll(tasks.Take(tc)).ConfigureAwait(false);
 
             lock (this)
             {
