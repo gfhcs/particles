@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Immutable;
+using System.Collections.Concurrent;
 
 namespace Particles
 {   
@@ -163,7 +164,7 @@ namespace Particles
         /// This struct cannot implement <see cref="IOctreeNode{T}"/>, because it does not know
         /// its own index in the octree. That's because storing this index in this struct would
         /// inflate the memory occupied by the octree unnecessarily.
-        /// For a type implementing  <see cref="IOctreeNode{T}"/> refer to <see cref="OctreeNodeReference"/> instead!
+        /// For a type implementing  <see cref="IOctreeNode{T}"/> refer to <see cref="NodeReference"/> instead!
         /// </remarks>
         protected struct LeafNode
         {
@@ -226,7 +227,7 @@ namespace Particles
         /// This struct cannot implement <see cref="IOctreeNode{T}"/>, because it does not know
         /// its own index in the octree. That's because storing this index in this struct would
         /// inflate the memory occupied by the octree unnecessarily.
-        /// For a type implementing  <see cref="IOctreeNode{T}"/> refer to <see cref="OctreeNodeReference"/> instead!
+        /// For a type implementing  <see cref="IOctreeNode{T}"/> refer to <see cref="NodeReference"/> instead!
         /// </remarks>
         protected struct InternalNode
         {
@@ -274,7 +275,7 @@ namespace Particles
         /// <summary>
         /// A reference to one of the nodes of an Octree.
         /// </summary>
-        protected struct OctreeNodeReference : IOctreeNode<T>
+        protected struct NodeReference : IOctreeNode<T>
         {
             private readonly Octree<T> owner;
             private readonly int index;
@@ -287,7 +288,7 @@ namespace Particles
             /// The index of the node this reference points to. Positive indices point into <see cref="internalNodes"/>,
             /// while negative indices point into <see cref="leafNodes"/>, where -1 refers to the last element.
             /// </param>
-            public OctreeNodeReference(Octree<T> owner, int index)
+            public NodeReference(Octree<T> owner, int index)
             {
                 this.owner = owner;
                 this.index = index;
@@ -314,7 +315,7 @@ namespace Particles
                 get { return index; }
             }
 
-            public IEnumerable<OctreeNodeReference> Children
+            public IEnumerable<NodeReference> Children
             {
                 get
                 {
@@ -327,7 +328,7 @@ namespace Particles
                     while (delta != 0)
                     {
                         idx += delta;
-                        yield return new OctreeNodeReference(owner, idx);
+                        yield return new NodeReference(owner, idx);
                         delta = idx < 0 ? owner.leafNodes[owner.leafNodes.Length + idx].RightSiblingDelta : owner.internalNodes[idx].RightSiblingDelta;
                     }
                 }
@@ -526,16 +527,22 @@ namespace Particles
         private readonly ImmutableArray<InternalNode> internalNodes;
 
         /// <summary>
+        /// Creates a new Octree.
+        /// </summary>
+        /// <param name="leafNodes">The leaf nodes of this octree.</param>
+        /// <param name="internalNodes">The internal nodes of this octree.</param>
+        protected Octree(ImmutableArray<LeafNode> leafNodes, ImmutableArray<InternalNode> internalNodes)
+        {
+            this.leafNodes = leafNodes;
+            this.internalNodes = internalNodes;
+        }
+
+        /// <summary>
         /// Creates a new octree
         /// </summary>
         /// <param name="objectsAndPositions">The objects to be indexed by this tree, along with their positions.</param>
         /// <param name="bounds">The bounds of the space to be covered by the octree. All objects must be contained in this space!</param>
-        /// <param name="compress">
-        /// Specifies whether the Octree should compress its representation in memory.
-        /// Doing so takes time, but requires less memory for most of the lifetime of the octree and
-        /// speeds up sequences of accesses to Octree nodes, because caches are used more efficiently.
-        /// </param>
-        private Octree(IEnumerable<(T, Vector3)> objectsAndPositions, AABB bounds, bool compress=true)
+        public Octree(IEnumerable<(T, Vector3)> objectsAndPositions, AABB bounds)
         {
             // Create leave nodes:
             var leaves = objectsAndPositions.Select((op) => new LeafNode(op.Item1, op.Item2)).ToArray();
@@ -556,14 +563,6 @@ namespace Particles
 
             Parallel.For(0, internals.Length, (i) => createInternalNode(mcs, i, leaves, internals));
 
-            if (compress)
-                throw new NotImplementedException("Compression of octrees has not been implemented yet!");
-                // TODO: Compress internal node array. This is done as follows:
-                //       1. Recursively go down the tree, until you have found enough nodes.
-                //       2. Start one thread per node, that compresses the subarray.
-                //          Since all pointers are just deltas and no pointer leaves the subarray that contains it,
-                //          threads can independently process their arrays. (This is not completely true, because internal nodes may point to leave nodes)
-
             this.leafNodes = leaves.ToImmutableArray();
             this.internalNodes = internalNodes.ToImmutableArray();
         }
@@ -580,9 +579,9 @@ namespace Particles
                     case 0:
                         throw new IndexOutOfRangeException("This Octree is empty and thus does not have a root node!");
                     case 1:
-                        return new OctreeNodeReference(this, -1);
+                        return new NodeReference(this, -1);
                     default:
-                        return new OctreeNodeReference(this, 0);
+                        return new NodeReference(this, 0);
                 }
             }
         }
@@ -608,6 +607,249 @@ namespace Particles
                 return InternalNodes;
             }
         }
-    }
 
+        #region "Compression"
+
+        /// <summary>
+        /// Determines which nodes in the subtree under <paramref name="root"/> are reachable from <paramref name="root"/>.
+        /// </summary>
+        /// <returns>A computation that writes to <paramref name="shifts"/>.</returns>
+        /// <param name="root">An octree node.</param>
+        /// <param name="shifts">An array that after this computation indicates which internal nodes are reachable from <paramref name="root"/>: If the internal node at index i is reachable
+        /// the cell at index i will be positive. Otherwise the value remains unchanged.</param>
+        private static Task reach (NodeReference root, int[] shifts)
+        {
+            var tasks = new Task[Environment.ProcessorCount];
+            var wakeups = new List<TaskCompletionSource<(NodeReference, int)>>();
+
+            /// <summary>
+            /// Traverses the subtree under <paramref name="n"/>.
+            /// </summary>
+            /// <param name="n">An octree node.</param>
+            /// <param name="depth">The depth of <paramref name="n"/>, relative to <paramref name="root"/>.</param>
+            /// <param name="maxPassOnDepth">The maximum depth up to which a task should check if nodes can be passed to other, waiting tasks.</param>
+            void traverse(NodeReference n, int depth, int maxPassOnDepth)
+            {
+                if (n.IsLeaf)
+                    return;
+
+                shifts[n.Index] = 1;
+
+                using (var e = n.Children.GetEnumerator())
+                {
+                    bool childrenRemaining = e.MoveNext();
+                    if (depth <= maxPassOnDepth)
+                        lock (wakeups)
+                        {
+                            while (childrenRemaining && wakeups.Count > 0)
+                            {
+                                var w = wakeups.Last();
+                                wakeups.RemoveAt(wakeups.Count - 1);
+                                w.SetResult((e.Current, depth + 1));
+
+                                childrenRemaining = e.MoveNext();
+                            }
+                        }
+
+                    for (; childrenRemaining; childrenRemaining = e.MoveNext())
+                        traverse(e.Current, depth + 1, maxPassOnDepth);
+                }
+            }
+
+            bool rootAdded = false;
+
+            var expectedHeight = (int)(Math.Log(shifts.Length) / Math.Log(8));
+            var maxPassOn = Math.Min(expectedHeight - 3, (int)(Math.Log(Environment.ProcessorCount * Environment.ProcessorCount) / Math.Log(8)));
+
+            for (int i = 0; i < tasks.Length; i++)
+            {
+                tasks[i] = Task.Run(async () =>
+                {
+                    while (true)
+                    {
+                        var tcs = new TaskCompletionSource<(NodeReference, int)>();
+
+                        lock (wakeups)
+                        {
+                            if (!rootAdded)
+                            {
+                                rootAdded = true;
+                                tcs.SetResult((root, 0));
+                            }
+                            else
+                                wakeups.Add(tcs);
+
+                            if (wakeups.Count == tasks.Length)
+                            {
+                                foreach (var w in wakeups)
+                                    w.SetCanceled();
+                            }
+                        }
+
+                        try
+                        {
+                            var nodeAtDepth = await tcs.Task;
+                            traverse(nodeAtDepth.Item1, nodeAtDepth.Item2, maxPassOn);
+                        }
+                        catch (TaskCanceledException)
+                        {
+                            return;
+                        }
+                    }
+                });
+            }
+
+            return Task.WhenAll(tasks);
+        }
+
+        /// <summary>
+        /// Computes by how much internal nodes can be shifted to the left based on whether they are actually reachable from the root of the octree.
+        /// </summary>
+        /// <returns>The number of unreachable nodes in the chunk considered by this call.</returns>
+        /// <param name="shifts">
+        /// An array that stores 1 for every internal node that is reachable from the root of an octree and 0 for all other internal nodes.
+        /// After this call, each cell that represents a reachable node will contain a delta value that indicates by how much the internal
+        /// node should be shifted to the left in order to compact the array of internal nodes such that no gaps of unreachable nodes remain.
+        /// Cells representing unreachable nodes will receive a negative value.
+        /// </param>
+        /// <param name="startIndex">The index of the first internal node to be considered by this call. Its shift is guaranteed to be zero if it is reachable, and some negative value otherwise.</param>
+        /// <param name="count">The number of internal nodes to be considered by this call. They form contiguous part of the array of internal nodes that starts at <paramref name="startIndex"/>.</param>
+        private static int computeShifts(int[] shifts, int startIndex, int count)
+        {
+            int acc = 0;
+            for (int i = startIndex; i < startIndex + count; i++)
+            {
+                switch (shifts[i])
+                {
+                    case 0:
+                        acc++;
+                        shifts[i] = -1;
+                        break;
+                    case 1:
+                        shifts[i] = -acc;
+                        break;
+                    default:
+                        throw new NotImplementedException(string.Format("{0}[{1}] contains the value {2}, which {3} has not been crafted to deal with!", nameof(shifts), i, shifts[i], nameof(computeShifts)));
+                }
+            }
+            return acc;
+        }
+
+        /// <summary>
+        /// Translates one internal node from an array of internal nodes to a new, compacted array.
+        /// Only reachable nodes will be copied and nodes will be shifted to the left, according to <paramref name="chunkShifts"/> and <paramref name="shifts"/>, such
+        /// that after this method has been called for all indices <paramref name="i"/> the array <paramref name="target"/> will contain precisely all the reachable nodes from <paramref name="source"/>.
+        /// Translation involves adjusting indices stored in the nodes according to <paramref name="chunkShifts"/> and <paramref name="shifts"/>.
+        /// </summary>
+        /// <param name="source">The array that the internal node is to be read from.</param>
+        /// <param name="chunkShifts">An array that holds one shift value for each chunk of <paramref name="source"/>.
+        /// A chunk is a contiguous part of <paramref name="source"/>. All chunks except for the last one must have length <paramref name="chunkSize"/>.
+        /// The shift value of a chunk indicates by how much the last internal node of that chunk is to be shifted to the left, globally; i.e. this shift value
+        /// may specify that the last item is to be moved outside of its original chunk.</param>
+        /// <param name="chunkSize">The number of internal nodes per chunk. All chunks of <paramref name="source"/> have this length, except for the very last one.</param>
+        /// <param name="shifts">An array that specifies by how much each internal node in <paramref name="source"/> is to be shifted to the left, *within* its chunk; i.e. the very first node in each chunk can only have value 0, if it is reachable. Unreachable nodes must bear a negative value!</param>
+        /// <param name="i">The index into <paramref name="source"/> specifying the internal node to be translated.</param>
+        /// <param name="target">The array that nodes are to be written to.</param>
+        private static void shiftInternal(ImmutableArray<InternalNode> source, int[] chunkShifts, int chunkSize, int[] shifts, int i, InternalNode[] target)
+        {
+            if (shifts[i] < 0)
+                return;
+
+            int translate(int idx)
+            { 
+                return idx < 0 ? idx : chunkShifts[idx / chunkSize] + shifts[idx];
+            }
+
+            var node = source[i];
+
+            var newIdx = translate(i);
+
+            node.FirstChildDelta = translate(i + node.FirstChildDelta) - newIdx;
+            node.RightSiblingDelta = translate(i + node.RightSiblingDelta) - newIdx;
+
+            target[newIdx] = node;
+        }
+
+        /// <summary>
+        /// Translates one leaf node from an array of leaf nodes to a new one.
+        /// The coordinate of the next sibling of this node, which may be an internal node, will be shifted according to <paramref name="chunkShifts"/> and <paramref name="shifts"/>.
+        /// </summary>
+        /// <param name="source">The array that the leaf node is to be read from.</param>
+        /// <param name="chunkShifts">An array that holds one shift value for each chunk of the internal nodes that <paramref name="source"/> belongs to.
+        /// A chunk is a contiguous part of that internal node array. All chunks except for the last one must have length <paramref name="chunkSize"/>.
+        /// The shift value of a chunk indicates by how much the last internal node of that chunk is to be shifted to the left, globally; i.e. this shift value
+        /// may specify that the last item is to be moved outside of its original chunk.</param>
+        /// <param name="chunkSize">The number of internal nodes per chunk. All chunks have this length, except for the very last one.</param>
+        /// <param name="shifts">An array that specifies by how much each internal node is to be shifted to the left, *within* its chunk; i.e. the very first node in each chunk can only have value 0, if it is reachable. Unreachable nodes must bear a negative value!</param>
+        /// <param name="i">The index into <paramref name="source"/> specifying the internal node to be translated.</param>
+        /// <param name="target">The array that nodes are to be written to.</param>
+        private static void shiftLeaf(ImmutableArray<LeafNode> source, int[] chunkShifts, int chunkSize, int[] shifts, int i, LeafNode[] target)
+        {
+            int translate(int idx)
+            {
+                return idx < 0 ? idx : chunkShifts[idx / chunkSize] + shifts[idx];
+            }
+
+            var iIdx = source.Length - i;
+
+            var node = source[i];
+
+            node.RightSiblingDelta = translate(iIdx + node.RightSiblingDelta) - iIdx;
+
+            target[i] = node;
+        }
+
+        /// <summary>
+        /// Returns an equivalent octree the memory footprint of which is smaller.
+        /// </summary>
+        /// <remarks>
+        /// Compressing memory takes time, but reduces the amount of memory occupied by the octree.
+        /// Furthermore, compressed octrees usually exhibit faster node accesses, because caches are used more efficiently.
+        /// </remarks>
+        public Task<Octree<T>> CompressMemory()
+        {
+            return Task.Run(async () =>
+            {
+                if (leafNodes.Length < 2 || leafNodes.Length > internalNodes.Length)
+                    return this;
+
+                var shifts = new int[internalNodes.Length];
+
+                // Find reachable nodes:
+                await reach(new NodeReference(this, 0), shifts);
+
+                // Compute deltas by which elements have to be shifted *within each chunk*:
+                var tasks = new Task<int>[Environment.ProcessorCount];
+                var stride = divUp(internalNodes.Length, tasks.Length);
+                var j = 0;
+                for (int i = 0; i < tasks.Length; i++)
+                {
+                    var count = Math.Min(stride, internalNodes.Length - j);
+                    tasks[i] = Task.Run(() => computeShifts(shifts, j, count));
+                    j += count;
+                }
+
+                var chunkShifts = await Task.WhenAll(tasks);
+
+                var acc = 0;
+                for (int i = 0; i < chunkShifts.Length; i++)
+                {
+                    var h = chunkShifts[i];
+                    chunkShifts[i] = acc;
+                    acc += h;
+                }
+
+                var newLeafNodes = new LeafNode[leafNodes.Length];
+                var newInternalNodes = new InternalNode[internalNodes.Length - chunkShifts.Last()];
+
+                // Shift elements:
+                Parallel.For(0, leafNodes.Length, (i) => shiftLeaf(leafNodes, chunkShifts, stride, shifts, i, newLeafNodes));
+                Parallel.For(0, internalNodes.Length, (i) => shiftInternal(internalNodes, chunkShifts, stride, shifts, i, newInternalNodes));
+
+                return new Octree<T>(newLeafNodes.ToImmutableArray(), newInternalNodes.ToImmutableArray());
+            });
+        }
+
+        #endregion
+    }
 }

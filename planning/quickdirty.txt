@@ -1,6 +1,6 @@
-Optimization: Straightforward Barnes-Hut
-    1. Have an Octree-Class that operates on sets of positions.
-    2. Make BallCloudGradient use it.
+Test Octree creation
+Test Octree compaction
+Make BallCloudGradient use Octree.
 Optimization: Can one have symmetric Barnes-Hut? I.e. can we also *write* the gravity exercised on a whole cluster?
 Optimizaton: Parallelize Barnes-Hut
 Optimization: Simulation mit Tasks parallelisieren
