@@ -1,5 +1,4 @@
-Test Octree creation
-Test Octree compaction
+Test the Octree class
 Make BallCloudGradient use Octree.
 Optimization: Can one have symmetric Barnes-Hut? I.e. can we also *write* the gravity exercised on a whole cluster?
 Optimizaton: Parallelize Barnes-Hut

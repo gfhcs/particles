@@ -51,6 +51,7 @@
     <Compile Include="MachineInfo.cs" />
     <Compile Include="TimeFraction.cs" />
     <Compile Include="TestPerformance.cs" />
+    <Compile Include="OctreeTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

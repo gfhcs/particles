@@ -587,6 +587,17 @@ namespace Particles
         }
 
         /// <summary>
+        /// The number of items stored in this octree.
+        /// </summary>
+        public int ItemCount
+        {
+            get
+            {
+                return leafNodes.Length;
+            }
+        }
+
+        /// <summary>
         /// The leaf nodes of this Octree.
         /// </summary>
         protected ImmutableArray<LeafNode> LeafNodes
