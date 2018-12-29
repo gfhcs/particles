@@ -197,7 +197,7 @@ namespace Particles
             /// </summary>
             public Vector3 Position
             {
-                get { return Position; }
+                get { return position; }
             }
 
             /// <summary>
