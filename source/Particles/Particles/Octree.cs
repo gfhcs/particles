@@ -218,6 +218,11 @@ namespace Particles
                     nextSiblingDelta = value;
                 }
             }
+
+            public override string ToString()
+            {
+                return string.Format("{0} at {1}", item, position);
+            }
         }
 
         /// <summary>
@@ -385,6 +390,10 @@ namespace Particles
                 }
             }
 
+            public override string ToString()
+            {
+                return string.Format("Node {0}", index);
+            }
 
         }
 
