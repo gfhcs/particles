@@ -60,7 +60,7 @@ namespace Particles
             x = ((x << 16) | x) & 0x00FF0000FF0000FFu;
             x = ((x << 8) | x) & 0xF00F00F00F00F00Fu;
             x = ((x << 4) | x) & 0x30C30C30C30C30C3u;
-            x = ((x << 2) | x) & 0x4924924949249249u;
+            x = ((x << 2) | x) & 0x9249249249249249u;
 
             return x;
         }
