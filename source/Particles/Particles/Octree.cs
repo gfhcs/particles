@@ -421,7 +421,7 @@ namespace Particles
                 return;
 
             var i2 = i1;
-            for (; i2 < mortonCodes.Length && mortonCodes[i2 + 1] == mortonCodes[i1]; i2++) { }
+            for (; i2 + 1 < mortonCodes.Length && mortonCodes[i2 + 1] == mortonCodes[i1]; i2++) { }
 
             // All nodes from i1 and i2 have the same Morton code.
 
