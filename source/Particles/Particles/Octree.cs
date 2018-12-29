@@ -560,7 +560,7 @@ namespace Particles
             var mcs = leaves.AsParallel().Select(l =>
             {
                 var r = (l.Position - bounds.Origin);
-                var u = new Vector3(r.X / bounds.Size.X, r.Y / bounds.Size.Y, r.Y / bounds.Size.Y);
+                var u = new Vector3(r.X / bounds.Size.X, r.Y / bounds.Size.Y, r.Z / bounds.Size.Z);
                 return morton(u);
             }).ToArray();
 
