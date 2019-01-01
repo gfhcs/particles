@@ -506,7 +506,7 @@ namespace Particles
                 var pred = - leaves.Length - 1; // Position of the node (leaf or internal!) that represents the previous child of our internal node
                 foreach (var end in splits.Distinct())
                 {
-                    if (pred < leaves.Length) // This is the very first child of our internal node
+                    if (pred < - leaves.Length) // This is the very first child of our internal node
                     {
                         var p = d > 0 ? i : j; // Is our internal node sitting on the left or on the right end of its morton code range?
                         // If start = end, then the first child is a single morton code and not an internal node.
