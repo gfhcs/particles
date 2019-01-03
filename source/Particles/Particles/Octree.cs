@@ -115,9 +115,10 @@ namespace Particles
         }
 
         /// <summary>
-        /// Computes a measure for how different two Morton codes are.
+        /// Computes the length of the longest prefix in which the binary representations of two Morton codes differ.
+        /// A return value of 0 indicates that Morton codes are perfectly equal. If <paramref name="i"/> or <paramref name="j"/> are out of bounds for <paramref name="mortonCodes"/>,
+        /// 66 is returned.
         /// </summary>
-        /// <returns>A number. The higher the number, the more different the Morton codes at indices <paramref name="i"/> and <paramref name="j"/> are. A value of 0 indicates perfect equality.</returns>
         /// <param name="mortonCodes">An array of Morton codes.</param>
         /// <param name="i">An index into <paramref name="mortonCodes"/>.</param>
         /// <param name="j">An index into <paramref name="mortonCodes"/>.</param>
@@ -483,7 +484,7 @@ namespace Particles
                 {
                     if (!(x < y))
                         return y;
-                    var dm = delta(mortonCodes, x, y); // Essentially, this is the number of *leading* binary digits in which morton code x differs from morton code y.
+                    var dm = delta(mortonCodes, x, y); // Essentially, this is the number of *trailing* binary digits in which morton code x differs from morton code y.
                     int s = x;
                     for (int k = divUp(y - x, 2); true; k = divUp(k, 2))
                     {
