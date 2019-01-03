@@ -125,7 +125,7 @@ namespace Particles
         private static int delta(ulong[] mortonCodes, int i, int j)
         {
             if (!(0 <= i && i < mortonCodes.Length && 0 <= j && j < mortonCodes.Length))
-                return 64;
+                return 66;
             var mi = mortonCodes[i];
             var mj = mortonCodes[j];
 
