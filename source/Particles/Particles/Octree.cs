@@ -489,7 +489,7 @@ namespace Particles
                     int s = x;
                     for (int k = divUp(y - x, 2); true; k = divUp(k, 2))
                     {
-                        if (delta(mortonCodes, i, s + k) < dm) // As long as morton code i differs from morton code s + k in fewer *leading* digits than s + k from j, we're still more similar to the left and of the range.
+                        if (delta(mortonCodes, x, s + k) < dm) // As long as morton code i differs from morton code s + k in fewer *trailing* digits than s + k from j, we're still more similar to the left and of the range.
                             s += k;
                         if (k <= 1) // If t becomes 1, divUp will always return 1
                             return s;
