@@ -101,6 +101,7 @@ namespace Particles
             x |= x >> 4;
             x |= x >> 8;
             x |= x >> 16;
+            x |= x >> 32;
             return x;
         }
 
