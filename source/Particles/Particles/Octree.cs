@@ -577,7 +577,7 @@ namespace Particles
             Parallel.For(0, internals.Length, (i) => createInternalNode(mcs, i, leaves, internals));
 
             this.leafNodes = leaves.ToImmutableArray();
-            this.internalNodes = internalNodes.ToImmutableArray();
+            this.internalNodes = internals.ToImmutableArray();
         }
 
         /// <summary>
