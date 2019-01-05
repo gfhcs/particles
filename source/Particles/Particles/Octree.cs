@@ -380,7 +380,7 @@ namespace Particles
             {
                 get
                 {
-                    return IsLeaf ? index : Children.Last().LastItemIndex;
+                    return IsLeaf ? index : this.Children.Last().LastItemIndex;
                 }
             }
 
