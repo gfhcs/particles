@@ -849,7 +849,8 @@ namespace Particles
                 for (int i = 0; i < tasks.Length; i++)
                 {
                     var count = Math.Min(stride, internalNodes.Length - j);
-                    tasks[i] = Task.Run(() => computeShifts(shifts, j, count));
+                    var startIndex = j;
+                    tasks[i] = Task.Run(() => computeShifts(shifts, startIndex, count));
                     j += count;
                 }
 
