@@ -356,7 +356,7 @@ namespace Particles
                     var l = this.LastItemIndex;
                     for (int i = this.FirstItemIndex; i <= l; i++)
                     {
-                        var leaf = owner.leafNodes[owner.LeafNodes.Length + index];
+                        var leaf = owner.leafNodes[owner.LeafNodes.Length + i];
                         yield return (leaf.Item, leaf.Position);
                     }
                 }
