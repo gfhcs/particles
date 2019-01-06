@@ -805,7 +805,7 @@ namespace Particles
         /// may specify that the last item is to be moved outside of its original chunk.</param>
         /// <param name="chunkSize">The number of internal nodes per chunk. All chunks have this length, except for the very last one.</param>
         /// <param name="shifts">An array that specifies by how much each internal node is to be shifted to the left, *within* its chunk; i.e. the very first node in each chunk can only have value 0, if it is reachable. Unreachable nodes must bear a negative value!</param>
-        /// <param name="i">The index into <paramref name="source"/> specifying the internal node to be translated.</param>
+        /// <param name="i">The index into <paramref name="source"/> specifying the leaf node to be translated.</param>
         /// <param name="target">The array that nodes are to be written to.</param>
         private static void shiftLeaf(ImmutableArray<LeafNode> source, int[] chunkShifts, int chunkSize, int[] shifts, int i, LeafNode[] target)
         {
@@ -814,7 +814,7 @@ namespace Particles
                 return idx < 0 ? idx : chunkShifts[idx / chunkSize] + shifts[idx];
             }
 
-            var iIdx = source.Length - i;
+            var iIdx = i - source.Length;
 
             var node = source[i];
 
