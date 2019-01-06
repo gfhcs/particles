@@ -865,7 +865,7 @@ namespace Particles
                 }
 
                 var newLeafNodes = new LeafNode[leafNodes.Length];
-                var newInternalNodes = new InternalNode[internalNodes.Length - chunkShifts.Last()];
+                var newInternalNodes = new InternalNode[internalNodes.Length - acc];
 
                 // Shift elements:
                 Parallel.For(0, leafNodes.Length, (i) => shiftLeaf(leafNodes, chunkShifts, stride, shifts, i, newLeafNodes));
