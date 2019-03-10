@@ -47,7 +47,7 @@ namespace Particles
     public class Octree<T>
     {
         #region "Morton code"
-        private const uint max = 2097152; // 2^21
+        private const uint MAX = 2097152; // 2^21
 
         /// <summary>
         /// Turns a 21-bit integer into a 63-bit integer by inserting 2 zeros before each bit.
@@ -75,9 +75,9 @@ namespace Particles
         /// <param name="v">A vector from the unit cube (all components within [0 ; 1])</param>
         private static ulong morton(Vector3 v)
         {
-            var x = spread3((uint)Math.Min(Math.Max(v.X * max, 0), max - 1));
-            var y = spread3((uint)Math.Min(Math.Max(v.Y * max, 0), max - 1));
-            var z = spread3((uint)Math.Min(Math.Max(v.Z * max, 0), max - 1));
+            var x = spread3((uint)Math.Min(Math.Max(v.X * MAX, 0), MAX - 1));
+            var y = spread3((uint)Math.Min(Math.Max(v.Y * MAX, 0), MAX - 1));
+            var z = spread3((uint)Math.Min(Math.Max(v.Z * MAX, 0), MAX - 1));
             return (x << 2) | (y << 1) | z;
         }
 
@@ -116,46 +116,41 @@ namespace Particles
         }
 
         /// <summary>
-        /// Computes the length of the longest prefix in which the binary representations of two Morton codes differ.
-        /// A return value of 0 indicates that Morton codes are perfectly equal. If <paramref name="i"/> or <paramref name="j"/> are out of bounds for <paramref name="mortonCodes"/>,
-        /// 66 is returned.
+        /// Computes the index of the first digit in which two Morton codes differ.
         /// </summary>
+        /// <returns>
+        /// 0 if Morton codes do not agree on the very first digit.
+        /// 64 if Morton codes are perfectly equal.
+        /// -1 if <paramref name="i"/> or <paramref name="j"/> are out of bounds for <paramref name="mortonCodes"/>.
+        /// </returns>
+        /// <remarks>
+        /// The return value of the method can be interpreted as a measure for how similar two Morton codes are.
+        /// If two Morton codes are very similar, the points identified by them are guaranteed to be close together in 3D space.
+        /// If two points are very close together in 3D space, their Morton codes are NOT guaranteed to be similar (although they
+        /// might be).
+        /// </remarks>
         /// <param name="mortonCodes">An array of Morton codes.</param>
         /// <param name="i">An index into <paramref name="mortonCodes"/>.</param>
         /// <param name="j">An index into <paramref name="mortonCodes"/>.</param>
-        private static int delta(ulong[] mortonCodes, int i, int j)
+        private static int sigma(ulong[] mortonCodes, int i, int j)
         {
-            if (!(0 <= i && i < mortonCodes.Length && 0 <= j && j < mortonCodes.Length))
-                return 66;
-            var mi = mortonCodes[i];
-            var mj = mortonCodes[j];
-
-            return 64 - countLeadingZeros(mi ^ mj);
+            try {
+                return countLeadingZeros(mortonCodes[i] ^ mortonCodes[j]);
+            } catch (IndexOutOfRangeException) {
+                return -1;
+            }
         }
 
-        /*
         /// <summary>
-        /// Compares the child boxes of that Morton code box that contains both given Morton codes.
+        /// Determines the digit at power <paramref name="power"/> within the binary representation of <paramref name="number"/>.
         /// </summary>
-        /// <returns>A number in the range [-7:7]. 0 means that the given Morton codes are equal.</returns>
-        /// <param name="mortonCodes">Morton codes.</param>
-        /// <param name="i">The index.</param>
-        /// <param name="j">J.</param>
-        private static int childCompare(ImmutableArray<uint> mortonCodes, int i, int j)
+        /// <returns><see langword="true"/>, if the digit is a one, <see langword="false"/> if the digit is a zero.</returns>
+        /// <param name="power">An index from the range [0:63].</param>
+        /// <param name="number">A number.</param>
+        private static bool digit(int power, ulong number)
         {
-            if (!(0 <= i && i < mortonCodes.Length && 0 <= j && j < mortonCodes.Length))
-                return 64;
-            var mi = mortonCodes[i];
-            var mj = mortonCodes[j];
-
-            var d = mi ^ mj;
-
-            var s = (64 - (countLeadingZeros(mi ^ mj) / 3) * 3) - 3;
-
-            return (int) (((mj >> s) & 0x000000000000007UL) - ((mi >> s) & 0x000000000000007UL));
-
+            return (number >> power) % 2 == 1;
         }
-        */
 
         #endregion
 
@@ -409,130 +404,189 @@ namespace Particles
         }
 
         /// <summary>
+        /// Finds the index at which morton codes stop having a zero digit in the given position.
+        /// </summary>
+        /// <returns>
+        /// The index of the leftmost morton code in subarray mortonCodes[x:y - 1] that has a one digit at power <paramref name="power"/>. 
+        /// If there is no such morton code in that subarray, y is returned.
+        /// </returns>
+        /// <param name="mortonCodes">A sorted array of Morton codes.</param>
+        /// <param name="power">The position in the morton code bit strings where to look for a change from zero to one.</param>
+        /// <param name="x">An index into <paramref name="mortonCodes"/> that points to the first item in the subarray of morton codes to be considered.</param>
+        /// <param name="y">An index into <paramref name="mortonCodes"/> that points to the first item right of the subarray of morton codes to be considered.</param>
+        /// <exception cref="ArgumentOutOfRangeException">If <paramref name="power"/> is not from [0:63].</exception>
+        /// <exception cref="ArgumentException">If <paramref name="y"/> &lt; <paramref name="x"/>.</exception>
+        private static int split(ulong[] mortonCodes, int power, int x, int y)
+        {
+            if (!(0 <= power && power <= 63))
+                throw new ArgumentOutOfRangeException(string.Format("{0} must be in the range [0:63]!", nameof(power)), nameof(power));
+
+            if (y < x)
+                throw new ArgumentException(string.Format("{0} must not be less than {1} !", nameof(y), nameof(x)), nameof(y));
+
+            var xdgt = digit(power, mortonCodes[x]);
+            var ydgt = digit(power, mortonCodes[y]);
+
+            while (x + 1 < y && xdgt != ydgt)
+            {
+                var m = (x + y) / 2;
+
+                var dgt1 = digit(power, mortonCodes[m]);
+                var dgt2 = digit(power, mortonCodes[m + 1]);
+
+                if (!dgt1 && dgt2)
+                    return m + 1;
+                else if (dgt1)
+                {
+                    y = m;
+                    ydgt = true;
+                }
+                else if (!dgt2)
+                {
+                    x = m + 1;
+                    xdgt = false;
+                }
+            }
+
+            return xdgt ? x : y;
+        }
+
+        /// <summary>
         /// Initializes an internal node of an octree.
         /// </summary>
         /// <remarks>
         /// This method uses the properties of the Z-curve (Morton curve) in order to determine the position of the internal node in the tree.
-        /// This method is safe to be called for all leaf indices (<paramref name="i1"/>) in parallel. After this method has been called for
+        /// This method is safe to be called for all leaf indices (<paramref name="i"/>) in parallel. After this method has been called for
         /// all leaf indices, the arras <paramref name="leaves"/> and <paramref name="internalNodes"/> are completely initialized.
         /// </remarks>
         /// <returns>A task object that can be awaited.</returns>
         /// <param name="mortonCodes">The sorted array of Morton codes for the objects indexed by the octree. May contain duplicates.</param>
         /// <param name="leaves">The array in which leave nodes for the octree are to be stored.</param>
-        /// <param name="i1">The index of a leaf node. An internal node with the same index (in <paramref name="internalNodes"/> will be created.</param>
+        /// <param name="i">The index of a leaf node. An internal node with the same index (in <paramref name="internalNodes"/> will be created.</param>
         /// <param name="internalNodes">The array in which internal nodes for the octree are to be stored.</param>
-        private static void createInternalNode(ulong[] mortonCodes, int i1, LeafNode[] leaves, InternalNode[] internalNodes)
+        private static void createInternalNode(ulong[] mortonCodes, int i, LeafNode[] leaves, InternalNode[] internalNodes)
         {
             // Idea:
-            // The i-th internal node sits at the edge of a box.
+            // Every morton code sits at the boundary of some morton code range
+            // that encompasses one 3D bounding box at a certain scale.
             // We find out the bounds of this box and then make this
             // internal node the root for this box.
 
-            if (0 < i1 && mortonCodes[i1 - 1] == mortonCodes[i1])
+            // Step 1: Which of our two neighboring codes is more similar to ours?
+            //         If the one on the left is more similar, we are sitting on the right end of a morton code range.
+            //         If the one on the right is more similar, we are sitting on the left end of a morton code range.
+
+            var s = Math.Sign(sigma(mortonCodes, i, i + 1) / 3 - sigma(mortonCodes, i - 1, i) / 3); // We divide values by three, because the code range of one box spans 3 binary digits.
+
+            // If s == 0, our internal node is neither the first, nor the last child of its parent.
+
+            if (s == 0) // Our left neighbor is as similar to our morton code as our right neighbor.
+            {
+                // In this case our Morton code must have the same parent node as its left and right neighbor,
+                // and it is neither the first, nor the last child of that parent node.
+                // In addition, the internal node we have to create here represents exactly one Morton code, 
+                // which violates the definition of "internal node" and will be detected by the parent node.
+                // Thus we do nothing.
                 return;
-
-            var i2 = i1;
-            for (; i2 + 1 < mortonCodes.Length && mortonCodes[i2 + 1] == mortonCodes[i1]; i2++) { }
-
-            // All nodes from i1 and i2 have the same Morton code.
-
-            var d = Math.Sign(delta(mortonCodes, i1 - 1, i1) / 3 - delta(mortonCodes, i2, i2 + 1) / 3);
-
-            // If d < 0, our internal node sits at the right edge of its leaf range.
-            // If d > 0, our internal node sits at the left edge of its leaf range.
-            // If d == 0, our internal node is neither the first, nor the last child of its parent.
-
-            if (d == 0)
-            {
-                // This node only spans only one single morton code:
-                internalNodes[i1].FirstChildDelta = i1 - (mortonCodes.Length + i1); // This delta points into mortonCodes.
-
-                for (int i = i1; i < i2; i++)
-                    leaves[i].RightSiblingDelta = 1;
             }
-            else
+
+            // Step 2: Delimit the range of Morton codes that our internal node should represent.
+            // We have to initialize an internal node.
+            // If s > 0, our internal node sits at the left edge of its leaf range.
+            // If s < 0, our internal node sits at the right edge of its leaf range.
+
+            var t = sigma(mortonCodes, i, i - s) / 3; // t is the sigma-threshold: All leaves under our internal node must have a sigma / 3 of strictly more than t to the Morton code at i.
+
+            // Step 2a): Find an outer bound for the opposite end of our leaf range:
+            int dd = 2 * s;
+            while (sigma(mortonCodes, i, i + dd) / 3 > t)
+                dd *= 2;
+
+            // Step 2b): Now search for the exact position of the opposite end:
+            var j = i;
+            for (dd /= 2; dd != 0; dd /= 2)
+                if (sigma(mortonCodes, i, j + dd) / 3 > t)
+                    j += dd;
+
+            // W.l.o.g let's have i < j:
+            var min = Math.Min(i, j);
+            var max = Math.Max(i, j);
+            i = min;
+            j = max;
+
+            j += 1; // j should point to the first code *outside* our range.
+
+            // Special case: All the Morton codes in our leaf range are equal.
+            if (mortonCodes[i] == mortonCodes[j - 1])
             {
-                var i = d < 0 ? i2 : i1;
+                // Then steps 3 and 4 are replaced by the much simpler task of making *all* the Morton codes in our leaf range direct children of our internal node:
 
-                var t = delta(mortonCodes, i, i - d) / 3;
+                var idx = s > 0 ? i : j - 1; // Position of our internal node.
+                var cidx = i - leaves.Length; // Position of our first leaf node.
+                internalNodes[idx].FirstChildDelta = idx - cidx;
 
-                // t is the delta-threshold: All leaves below our internal node must have a delta of less than t to the Morton code at i.
+                if (s > 0) // Avoids a race: Only the thread creating the internal node at the *left* edge of the leaf range should do this. The other one would write the exact same stuff.
+                    for (; cidx < j - 1; cidx++)
+                        leaves[cidx].RightSiblingDelta = 1;
 
-                // Find an outer bound for the opposite end of our child range:
-                int dd = 2 * d;
-                while (delta(mortonCodes, i, i + dd) / 3 < t)
-                    dd *= 2;
+                return;
+            }
 
-                // Now search for the exact position of the opposite end:
-                var j = i;
-                for (dd /= 2; dd != 0; dd /= 2)
-                    if (delta(mortonCodes, i, j + dd) / 3 < t)
-                        j += dd;
+            // Step 3: Determine the leaf ranges of the *children* of our internal node:
 
-                if (j < i)
+            var starts = new int[9]; // Tells us where child ranges start. The last entry delimits the end of the last child range.
+
+            var p = 63 - (t + 1) * 3;
+
+            starts[0] = i;
+            starts[8] = j;
+            starts[4] = split(mortonCodes, p - 1, starts[0], starts[8]);
+            starts[2] = split(mortonCodes, p - 2, starts[0], starts[4]);
+            starts[6] = split(mortonCodes, p - 2, starts[4], starts[8]);
+            starts[1] = split(mortonCodes, p - 3, starts[0], starts[2]);
+            starts[3] = split(mortonCodes, p - 3, starts[2], starts[4]);
+            starts[5] = split(mortonCodes, p - 3, starts[4], starts[6]);
+            starts[7] = split(mortonCodes, p - 3, starts[6], starts[8]);
+
+            // Step 4: Initialize our internal node and its child nodes (in a complementary way):
+            // Note: Index zero points at internalNodes[0]. Index -1 points at leafNodes[leafNodes.Length - 1].
+
+            int pred = -leaves.Length - 1; // Position of the node (leaf or internal!) that represents the previous child of our internal node.
+            bool first = true;
+
+            for (int si = 0; i < starts.Length - 1; i++)
+            {
+                var start = starts[si]; // The range for our current child starts here.
+                var end = starts[si + 1]; // The range for our current child ends here.
+
+                if (start == end) // The range for our current child is empty.
+                    continue;
+
+                if (first) // This is the very first child of our internal node
                 {
-                    var h = i;
-                    i = j;
-                    j = h;
+                    var idx = s > 0 ? i : j - 1; // Position of our internal node.
+                    var cidx = end - 1; // Position of our child node. It's at the *end* of its leaf range! (because our internal node might sit at the start!)
+                    // If our child node represents only a single morton code, it is a leaf node and not an internal node:
+                    if (end - start == 1)
+                        cidx -= leaves.Length;
+                    internalNodes[idx].FirstChildDelta = idx - cidx;
+                    pred = cidx;
                 }
-
-                // Now determine the child ranges:
-
-                /// <summary>
-                /// Returns the index of the last morton code that is more similar to the one at <paramref name="x"/> than the one at <paramref name="y"/>.
-                /// </summary>
-                int split(int x, int y)
+                else
                 {
-                    if (!(x < y))
-                        return y;
-                    var dm = delta(mortonCodes, x, y); // Essentially, this is the number of *trailing* binary digits in which morton code x differs from morton code y.
-                    int s = x;
-                    for (int k = divUp(y - x, 2); true; k = divUp(k, 2))
-                    {
-                        if (delta(mortonCodes, x, s + k) < dm) // As long as morton code i differs from morton code s + k in fewer *trailing* digits than s + k from j, we're still more similar to the left and of the range.
-                            s += k;
-                        if (k <= 1) // If t becomes 1, divUp will always return 1
-                            return s;
-                    }
+                    var cidx = start; // Position of our child node. It's at the *start* of its leaf range! (because our internal node might sit at the end!)
+                    // If our child node represents only a single morton code, it is a leaf node and not an internal node:
+                    if (end - start == 1)
+                        cidx -= leaves.Length;
+
+                    if (pred < 0) // Previous child is a leaf node
+                        leaves[leaves.Length + pred].RightSiblingDelta = cidx - pred;
+                    else // Previous child is an internal node
+                        internalNodes[pred].RightSiblingDelta = cidx - pred;
+
+                    pred = cidx;
                 }
-
-                var splits = new int[7];
-
-                splits[3] = split(i, j);
-                splits[1] = split(i, splits[3]);
-                splits[5] = split(splits[3] + 1, j);
-                splits[0] = split(i, splits[1]);
-                splits[2] = split(splits[1] + 1, splits[3]);
-                splits[4] = split(splits[3] + 1, splits[5]);
-                splits[6] = split(splits[5] + 1, j);
-
-                var start = i; // Start of the range for the current child of our internal node
-                var pred = - leaves.Length - 1; // Position of the node (leaf or internal!) that represents the previous child of our internal node
-                foreach (var end in splits.Distinct())
-                {
-                    if (pred < - leaves.Length) // This is the very first child of our internal node
-                    {
-                        var p = d > 0 ? i : j; // Is our internal node sitting on the left or on the right end of its morton code range?
-                        // If start = end, then the first child is a single morton code and not an internal node.
-                        var idx = start < end ? end : end - leaves.Length;
-                        internalNodes[p].FirstChildDelta = idx - p;
-                        pred = idx;
-                    }
-                    else // This is not the first child of our internal node
-                    {
-                        // If start = end, then the current child is a single morton code and not an internal node.
-                        var idx = start < end ? start : start - leaves.Length;
-
-                        if (pred < 0) // Previous child is a leaf node
-                            leaves[leaves.Length + pred].RightSiblingDelta = idx - pred;
-                        else // Previous child is an internal node
-                            internalNodes[pred].RightSiblingDelta = idx - pred;
-
-                        pred = idx;
-                    }
-
-                    start = end + 1;
-                }
+                first = false;
             }
         }
 
