@@ -439,14 +439,20 @@ namespace Particles
         /// <param name="x">An index into <paramref name="mortonCodes"/> that points to the first item in the subarray of morton codes to be considered.</param>
         /// <param name="y">An index into <paramref name="mortonCodes"/> that points to the first item right of the subarray of morton codes to be considered.</param>
         /// <exception cref="ArgumentOutOfRangeException">If <paramref name="power"/> is not from [0:63].</exception>
+        /// <exception cref="ArgumentOutOfRangeException">If <paramref name="x"/> is less than or <paramref name="y"/> is greather than the length of <paramref name="mortonCodes"/>.</exception>
         /// <exception cref="ArgumentException">If <paramref name="y"/> &lt; <paramref name="x"/>.</exception>
         private static int split(ulong[] mortonCodes, int power, int x, int y)
         {
             if (!(0 <= power && power <= 63))
                 throw new ArgumentOutOfRangeException(string.Format("{0} must be in the range [0:63]!", nameof(power)), nameof(power));
-
+            if (!(0 <= x))
+                throw new ArgumentOutOfRangeException(string.Format("{0} must not be negative!", nameof(x)), nameof(x));
+            if (!(y <= mortonCodes.Length))
+                throw new ArgumentOutOfRangeException(string.Format("{0} must not be greater than the length of {1}!", nameof(y), nameof(mortonCodes)), nameof(x));
             if (y < x)
                 throw new ArgumentException(string.Format("{0} must not be less than {1} !", nameof(y), nameof(x)), nameof(y));
+
+            y--;
 
             var xdgt = digit(power, mortonCodes[x]);
             var ydgt = digit(power, mortonCodes[y]);
