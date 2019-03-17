@@ -142,6 +142,30 @@ namespace Particles
         }
 
         /// <summary>
+        /// Computes a measure for how similar two Morton codes are.
+        /// </summary>
+        /// <returns>
+        /// -1 if <paramref name="i"/> or <paramref name="j"/> are out of bounds for <paramref name="mortonCodes"/>.
+        /// -1 if Morton codes do not agree on the very first of their 64 digits.
+        /// i if the first digit where Morton codes do not agree is the digit at position 1 + i * 3 + f from the left, where f is either 0, 1 or 2.
+        /// </returns>
+        /// <remarks>
+        /// Morton codes are obtained by reading <paramref name="mortonCodes"/> at indices <paramref name="i"/> and <paramref name="j"/>.
+        /// They are supposed to be 64-bit numbers.
+        /// If two Morton codes are very similar, the points identified by them are guaranteed to be close together in 3D space.
+        /// If two points are very close together in 3D space, their Morton codes are NOT guaranteed to be similar (although they
+        /// might be).
+        /// </remarks>
+        /// <param name="mortonCodes">An array of Morton codes.</param>
+        /// <param name="i">An index into <paramref name="mortonCodes"/>.</param>
+        /// <param name="j">An index into <paramref name="mortonCodes"/>.</param>
+        private static int slottedSigma(ulong[] mortonCodes, int i, int j)
+        {
+            var s = sigma(mortonCodes, i, j) - 1;
+            return s < 0 ? -1 : s / 3;
+        }
+
+        /// <summary>
         /// Determines the digit at power <paramref name="power"/> within the binary representation of <paramref name="number"/>.
         /// </summary>
         /// <returns><see langword="true"/>, if the digit is a one, <see langword="false"/> if the digit is a zero.</returns>
@@ -476,7 +500,7 @@ namespace Particles
             //         If the one on the left is more similar, we are sitting on the right end of a morton code range.
             //         If the one on the right is more similar, we are sitting on the left end of a morton code range.
 
-            var s = Math.Sign(sigma(mortonCodes, i, i + 1) / 3 - sigma(mortonCodes, i - 1, i) / 3); // We divide values by three, because the code range of one box spans 3 binary digits.
+            var s = Math.Sign(slottedSigma(mortonCodes, i, i + 1) - slottedSigma(mortonCodes, i - 1, i)); // We divide values by three, because the code range of one box spans 3 binary digits.
 
             // If s == 0, our internal node is neither the first, nor the last child of its parent.
 
@@ -495,17 +519,17 @@ namespace Particles
             // If s > 0, our internal node sits at the left edge of its leaf range.
             // If s < 0, our internal node sits at the right edge of its leaf range.
 
-            var t = sigma(mortonCodes, i, i - s) / 3; // t is the sigma-threshold: All leaves under our internal node must have a sigma / 3 of strictly more than t to the Morton code at i.
+            var t = slottedSigma(mortonCodes, i, i - s); // t is the sigma-threshold: All leaves under our internal node must have a slottedSigma of strictly more than t to the Morton code at i.
 
             // Step 2a): Find an outer bound for the opposite end of our leaf range:
             int dd = 2 * s;
-            while (sigma(mortonCodes, i, i + dd) / 3 > t)
+            while (slottedSigma(mortonCodes, i, i + dd) > t)
                 dd *= 2;
 
             // Step 2b): Now search for the exact position of the opposite end:
             var j = i;
             for (dd /= 2; dd != 0; dd /= 2)
-                if (sigma(mortonCodes, i, j + dd) / 3 > t)
+                if (slottedSigma(mortonCodes, i, j + dd) > t)
                     j += dd;
 
             // W.l.o.g let's have i < j:
@@ -536,7 +560,7 @@ namespace Particles
 
             var starts = new int[9]; // Tells us where child ranges start. The last entry delimits the end of the last child range.
 
-            var p = 63 - (t + 1) * 3;
+            var p = 64 - (1 + Math.Max(0, t) * 3);
 
             starts[0] = i;
             starts[8] = j;
