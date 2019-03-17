@@ -584,7 +584,7 @@ namespace Particles
             int pred = -leaves.Length - 1; // Position of the node (leaf or internal!) that represents the previous child of our internal node.
             bool first = true;
 
-            for (int si = 0; i < starts.Length - 1; i++)
+            for (int si = 0; si < starts.Length - 1; si++)
             {
                 var start = starts[si]; // The range for our current child starts here.
                 var end = starts[si + 1]; // The range for our current child ends here.
@@ -599,7 +599,7 @@ namespace Particles
                     // If our child node represents only a single morton code, it is a leaf node and not an internal node:
                     if (end - start == 1)
                         cidx -= leaves.Length;
-                    internalNodes[idx].FirstChildDelta = idx - cidx;
+                    internalNodes[idx].FirstChildDelta = cidx - idx;
                     pred = cidx;
                 }
                 else
