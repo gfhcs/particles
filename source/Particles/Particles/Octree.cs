@@ -146,8 +146,8 @@ namespace Particles
         /// </summary>
         /// <returns>
         /// -1 if <paramref name="i"/> or <paramref name="j"/> are out of bounds for <paramref name="mortonCodes"/>.
-        /// -1 if Morton codes do not agree on the very first of their 64 digits.
-        /// i if the first digit where Morton codes do not agree is the digit at position 1 + i * 3 + f from the left, where f is either 0, 1 or 2.
+        /// -1 if Morton codes do not agree on the very first of their 64 digits (i.e. the one with index 0)
+        /// i if the first digit where Morton codes do not agree is the digit at index 1 + i * 3 + f from the left, where f is either 0, 1 or 2.
         /// </returns>
         /// <remarks>
         /// Morton codes are obtained by reading <paramref name="mortonCodes"/> at indices <paramref name="i"/> and <paramref name="j"/>.
