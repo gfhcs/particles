@@ -449,39 +449,21 @@ namespace Particles
                 throw new ArgumentOutOfRangeException(string.Format("{0} must not be negative!", nameof(x)), nameof(x));
             if (!(y <= mortonCodes.Length))
                 throw new ArgumentOutOfRangeException(string.Format("{0} must not be greater than the length of {1}!", nameof(y), nameof(mortonCodes)), nameof(x));
-            if (y < x)
+            if (y - x < 0)
                 throw new ArgumentException(string.Format("{0} must not be less than {1} !", nameof(y), nameof(x)), nameof(y));
 
-            if (x == y)
-                return y;
+            if (digit(power, mortonCodes[x]))
+                return x;
 
-            y--;
-
-            var xdgt = digit(power, mortonCodes[x]);
-            var ydgt = digit(power, mortonCodes[y]);
-
-            while (x + 1 < y && xdgt != ydgt)
+            for (var dd = divUp(y - x, 2); dd != 0 && x < y - dd; dd = divUp(dd, 2))
             {
-                var m = (x + y) / 2;
-
-                var dgt1 = digit(power, mortonCodes[m]);
-                var dgt2 = digit(power, mortonCodes[m + 1]);
-
-                if (!dgt1 && dgt2)
-                    return m + 1;
-                else if (dgt1)
-                {
-                    y = m;
-                    ydgt = true;
-                }
-                else if (!dgt2)
-                {
-                    x = m + 1;
-                    xdgt = false;
-                }
+                if (digit(power, mortonCodes[y - dd]))
+                    y -= dd;
+                if (dd == 1)
+                    break;
             }
 
-            return xdgt ? x : y;
+            return y;
         }
 
         /// <summary>
