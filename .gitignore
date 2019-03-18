@@ -3,3 +3,5 @@
 **/obj
 **/packages
 *.user
+
+*.blend*
