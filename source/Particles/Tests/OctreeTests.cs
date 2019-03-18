@@ -231,11 +231,24 @@ namespace Tests
 
             Assert.False(r.IsLeaf);
             Assert.True(pSet.SetEquals(from p in r.Items select p.Item1));
-            Assert.Equal(7, r.Children.Count());
+            Assert.Equal(5, height(ot));
 
-            var childCounts = new HashSet<int>(new[] { 1, 2, 3, 10});
-            Assert.True(childCounts.SetEquals(from c in r.Children select c.Items.Count()));
-            Assert.Equal(4, height(ot)); // TODO: 4 is just a guess. I don't know if it's correct.
+            var layer1 = r.Children.ToArray();
+            var layer2 = (from n in layer1 from c in n.Children select c).ToArray();
+            var layer3 = (from n in layer2 from c in n.Children select c).ToArray();
+            var layer4 = (from n in layer3 from c in n.Children select c).ToArray();
+            var layer5 = (from n in layer4 from c in n.Children select c).ToArray();
+            var layer6 = (from n in layer4 from c in n.Children select c).ToArray();
+
+            Assert.Equal(7, layer1.Length);
+            Assert.Equal(3, layer1.Count((n) => n.IsLeaf));
+            Assert.Equal(10, layer2.Length);
+            Assert.Equal(6, layer2.Count((n) => n.IsLeaf));
+            Assert.Equal(10, layer3.Length);
+            Assert.Equal(9, layer3.Count((n) => n.IsLeaf));
+            Assert.Equal(2, layer4.Length);
+            Assert.Equal(2, layer4.Count((n) => n.IsLeaf));
+            Assert.Equal(0, layer5.Length);
 
             AssertNoSingleInternalChildren(r);
 
