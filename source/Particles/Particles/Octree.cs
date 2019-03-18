@@ -452,6 +452,9 @@ namespace Particles
             if (y < x)
                 throw new ArgumentException(string.Format("{0} must not be less than {1} !", nameof(y), nameof(x)), nameof(y));
 
+            if (x == y)
+                return y;
+
             y--;
 
             var xdgt = digit(power, mortonCodes[x]);
