@@ -455,9 +455,9 @@ namespace Particles
             if (digit(power, mortonCodes[x]))
                 return x;
 
-            for (var dd = divUp(y - x, 2); dd != 0 && x < y - dd; dd = divUp(dd, 2))
+            for (var dd = divUp(y - x, 2); dd != 0; dd = divUp(dd, 2))
             {
-                if (digit(power, mortonCodes[y - dd]))
+                if (x < y - dd /* mortonCodes[x] was already checked above! */ && digit(power, mortonCodes[y - dd]))
                     y -= dd;
                 if (dd == 1)
                     break;
