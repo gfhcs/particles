@@ -531,8 +531,10 @@ namespace Particles
 
             j += 1; // j should point to the first code *outside* our range.
 
+            var slotLevel = slottedSigma(mortonCodes, i, j - 1); // The number of leading slots that all morton codes in our range have in common.
+
             // Special case: All the Morton codes in our leaf range are equal.
-            if (mortonCodes[i] == mortonCodes[j - 1])
+            if (slotLevel == 21)
             {
                 // Then steps 3 and 4 are replaced by the much simpler task of making *all* the Morton codes in our leaf range direct children of our internal node:
 
@@ -551,7 +553,7 @@ namespace Particles
 
             var starts = new int[9]; // Tells us where child ranges start. The last entry delimits the end of the last child range.
 
-            var p = 64 - (1 + Math.Max(0, t) * 3);
+            var p = 64 - (1 + slotLevel * 3); // All the Morton codes in our range agree from the first digit, i.e. the one at index 63, to the digit at index p (and possible further digits)
 
             starts[0] = i;
             starts[8] = j;
