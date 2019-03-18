@@ -768,9 +768,10 @@ namespace Particles
             }
 
             bool rootAdded = false;
-
-            var expectedHeight = (int)(Math.Log(shifts.Length) / Math.Log(8));
-            var maxPassOn = Math.Max(0, Math.Min(expectedHeight - 3, (int)(Math.Log(Environment.ProcessorCount * Environment.ProcessorCount) / Math.Log(8))));
+            
+            // On average, we expect each internal node to have 4 children.
+            var expectedHeight = (int)(Math.Log(shifts.Length) / Math.Log(4));
+            var maxPassOn = Math.Max(0, Math.Min(expectedHeight - 3, (int)(Math.Log(Environment.ProcessorCount * Environment.ProcessorCount) / Math.Log(4))));
 
             for (int i = 0; i < tasks.Length; i++)
             {
