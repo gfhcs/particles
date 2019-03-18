@@ -56,6 +56,30 @@ namespace Tests
                 Match(expected.Root, actual.Root);
         }
 
+        /// <summary>
+        /// Asserts that the subtree under the given <paramref name="node"/> does not contain
+        /// any internal node except for <paramref name="node"/> that is the only child of its parent.
+        /// </summary>
+        /// <param name="node">An octree node.</param>
+        /// <typeparam name="T">The type of the items stored in the octree to which <paramref name="node"/> belongs.</typeparam>
+        private void AssertNoSingleInternalChildren<T>(IOctreeNode<T> node)
+        {
+            if (node.Children.Count() == 1)
+                Assert.True(node.Children.First().IsLeaf, "An internal node that is the only child of its parent was found!");
+            foreach (var c in node.Children)
+                AssertNoSingleInternalChildren(c);
+        }
+
+        /// <summary>
+        /// Asserts that the given octree does not contain any internal node that is the only child of its parent.
+        /// </summary>
+        /// <param name="tree">An octree.</param>
+        /// <typeparam name="T">The type of the items stored in <paramref name="tree"/>.</typeparam>
+        private void AssertNoSingleInternalChildren<T>(Octree<T> tree)
+        {
+            AssertNoSingleInternalChildren(tree.Root);
+        }
+
         [Fact()]
         public async Task TestEmpty()
         {
@@ -126,6 +150,8 @@ namespace Tests
             Assert.True(pSet.SetEquals(from p in r.Items select p.Item1));
             Assert.True(pSet.SetEquals(from p in r.Items select p.Item2));
             Assert.True(pSet.SetEquals(from c in r.Children from p in c.Items select p.Item1));
+
+            AssertNoSingleInternalChildren(r);
 
             var cot = await ot.CompressMemory();
 
@@ -210,6 +236,8 @@ namespace Tests
             var childCounts = new HashSet<int>(new[] { 1, 2, 3, 10});
             Assert.True(childCounts.SetEquals(from c in r.Children select c.Items.Count()));
             Assert.Equal(4, height(ot)); // TODO: 4 is just a guess. I don't know if it's correct.
+
+            AssertNoSingleInternalChildren(r);
 
             var cot = await ot.CompressMemory();
 

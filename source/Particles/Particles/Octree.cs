@@ -617,6 +617,8 @@ namespace Particles
         {
             this.leafNodes = leafNodes;
             this.internalNodes = internalNodes;
+
+            AssertNoSingleInternalChildren();
         }
 
         /// <summary>
@@ -626,7 +628,7 @@ namespace Particles
         /// <param name="bounds">The bounds of the space to be covered by the octree. All objects must be contained in this space!</param>
         public Octree(IEnumerable<(T, Vector3)> objectsAndPositions, AABB bounds)
         {
-            // Create leave nodes:
+            // Create leaf nodes:
             var leaves = objectsAndPositions.Select((op) => new LeafNode(op.Item1, op.Item2)).ToArray();
 
             // Compute Morton codes for the leave nodes:
@@ -647,6 +649,20 @@ namespace Particles
 
             this.leafNodes = leaves.ToImmutableArray();
             this.internalNodes = internals.ToImmutableArray();
+
+            AssertNoSingleInternalChildren();
+        }
+
+        /// <summary>
+        /// Asserts that this octree does not contain any internal node that is the only child of its parent.
+        /// </summary>
+        private void AssertNoSingleInternalChildren()
+        {
+            for (int i = 0; i < internalNodes.Length; i++) {
+                var ir = new NodeReference(this, i);
+                if (ir.Children.Count() == 1 && !ir.Children.First().IsLeaf)
+                    throw new Exception(string.Format("This octree contains an internal node that is the only child of its parent! This constitutes a bug in the implementation of {0}!", nameof(Octree<T>)));
+            }
         }
 
         /// <summary>
