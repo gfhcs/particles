@@ -540,11 +540,11 @@ namespace Particles
 
                 var idx = s > 0 ? i : j - 1; // Position of our internal node.
                 var cidx = i - leaves.Length; // Position of our first leaf node.
-                internalNodes[idx].FirstChildDelta = idx - cidx;
+                internalNodes[idx].FirstChildDelta = cidx - idx;
 
                 if (s > 0) // Avoids a race: Only the thread creating the internal node at the *left* edge of the leaf range should do this. The other one would write the exact same stuff.
-                    for (; cidx < j - 1; cidx++)
-                        leaves[cidx].RightSiblingDelta = 1;
+                    for (; cidx < j - leaves.Length - 1; cidx++)
+                        leaves[leaves.Length + cidx].RightSiblingDelta = 1;
 
                 return;
             }
