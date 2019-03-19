@@ -52,6 +52,7 @@
     <Compile Include="IRenderer.cs" />
     <Compile Include="Octree.cs" />
     <Compile Include="AABB.cs" />
+    <Compile Include="ITree.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
