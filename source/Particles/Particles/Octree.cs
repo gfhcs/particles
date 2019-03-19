@@ -815,15 +815,21 @@ namespace Particles
         }
 
         /// <summary>
-        /// Computes by how much internal nodes can be shifted to the left based on whether they are actually reachable from the root of the octree.
+        /// Computes by how much internal nodes should be shifted based on whether they are actually reachable from the root of the octree.
         /// </summary>
-        /// <returns>The number of unreachable nodes in the chunk considered by this call.</returns>
+        /// <returns>The shift that should be used for the element immediately following the range delimited by <paramref name="startIndex"/> and <paramref name="count"/>, i.e. a negative number 
+        /// that indicates the number of unreachable nodes in the chunk considered by this call.</returns>
         /// <param name="shifts">
         /// An array that stores 1 for every internal node that is reachable from the root of an octree and 0 for all other internal nodes.
-        /// After this call, each cell that represents a reachable node will contain a delta value that indicates by how much the internal
-        /// node should be shifted to the left in order to compact the array of internal nodes such that no gaps of unreachable nodes remain.
-        /// Cells representing unreachable nodes will receive a negative value.
+        /// After this call, each cell that represents a reachable node will contain a (negative) delta value indicating by how much the internal
+        /// node should be shifted in order to compact the array of internal nodes such that no gaps of unreachable nodes remain.
+        /// Cells representing unreachable nodes will receive the value <see cref="Int32.MinValue"/>.
         /// </param>
+        /// <remarks>
+        /// After this call, all values in <paramref name="shifts"/> will be negative! Note that <see cref="Int32.MinValue"/> was chosen for unreachable
+        /// notes because managed arrays can only hold - <see cref="Int32.MinValue"/> - 1 elements. This means that confusing <see cref="Int32.MinValue"/> for
+        /// an actual shift value is guaranteed to result in an invalid array index, which will cause exceptions to be raised.
+        /// </remarks>
         /// <param name="startIndex">The index of the first internal node to be considered by this call. Its shift is guaranteed to be zero if it is reachable, and some negative value otherwise.</param>
         /// <param name="count">The number of internal nodes to be considered by this call. They form contiguous part of the array of internal nodes that starts at <paramref name="startIndex"/>.</param>
         private static int computeShifts(int[] shifts, int startIndex, int count)
@@ -834,11 +840,11 @@ namespace Particles
                 switch (shifts[i])
                 {
                     case 0:
-                        acc++;
-                        shifts[i] = -1;
+                        acc--;
+                        shifts[i] = Int32.MinValue;
                         break;
                     case 1:
-                        shifts[i] = -acc;
+                        shifts[i] = acc;
                         break;
                     default:
                         throw new NotImplementedException(string.Format("{0}[{1}] contains the value {2}, which {3} has not been crafted to deal with!", nameof(shifts), i, shifts[i], nameof(computeShifts)));
@@ -864,12 +870,12 @@ namespace Particles
         /// <param name="target">The array that nodes are to be written to.</param>
         private static void shiftInternal(ImmutableArray<InternalNode> source, int[] chunkShifts, int chunkSize, int[] shifts, int i, InternalNode[] target)
         {
-            if (shifts[i] < 0)
+            if (shifts[i] == Int32.MinValue)
                 return;
 
             int translate(int idx)
             { 
-                return idx < 0 ? idx : chunkShifts[idx / chunkSize] + shifts[idx];
+                return idx < 0 ? idx : idx + chunkShifts[idx / chunkSize] + shifts[idx];
             }
 
             var node = source[i];
@@ -899,7 +905,7 @@ namespace Particles
         {
             int translate(int idx)
             {
-                return idx < 0 ? idx : chunkShifts[idx / chunkSize] + shifts[idx];
+                return idx < 0 ? idx : idx + chunkShifts[idx / chunkSize] + shifts[idx];
             }
 
             var iIdx = i - source.Length;
