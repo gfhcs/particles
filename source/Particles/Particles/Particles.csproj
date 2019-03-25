@@ -50,9 +50,10 @@
     <Compile Include="DiscreteFilter.cs" />
     <Compile Include="quantities\BallCloudRenderer.cs" />
     <Compile Include="IRenderer.cs" />
-    <Compile Include="Octree.cs" />
+    <Compile Include="MortonOctree.cs" />
     <Compile Include="AABB.cs" />
     <Compile Include="ITree.cs" />
+    <Compile Include="ISpatialIndex.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

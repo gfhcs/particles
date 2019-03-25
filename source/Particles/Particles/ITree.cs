@@ -89,9 +89,9 @@ namespace Particles
         /// It is called once after the child subtrees of a node have all been folded. Its parameters are the current node and the sequence of values obtained for the children.</param>
         /// <typeparam name="F">The return type of <paramref name="f"/>.</typeparam>
         /// <typeparam name="N">The type of <paramref name="node"/>.</typeparam>
-        public static F Fold<N, F>(this N node, Func <N, IEnumerable<F>, F> f) where N : ITreeNode<N>
+        public static F Fold<N, F>(this ITreeNode<N> node, Func <N, IEnumerable<F>, F> f) where N : ITreeNode<N>
         {
-            return f(node, from c in node.Children select c.Fold(f));
+            return f((N)node, from c in node.Children select c.Fold(f));
         }
 
         /// <summary>
@@ -114,12 +114,12 @@ namespace Particles
         /// </param>
         /// <typeparam name="F">The return type of <paramref name="f"/>.</typeparam>
         /// <typeparam name="N">The type of <paramref name="node"/>.</typeparam>
-        public static F Fold<N, F>(this N node, Func<N, F, F, F> f, F initial) where N : ITreeNode<N>
+        public static F Fold<N, F>(this ITreeNode<N> node, Func<N, F, F, F> f, F initial) where N : ITreeNode<N>
         {
             var acc = initial;
 
             foreach (var c in node.Children)
-                acc = f(node, acc, c.Fold(f, initial));
+                acc = f((N)node, acc, c.Fold(f, initial));
 
             return acc;
         }
@@ -137,7 +137,7 @@ namespace Particles
         /// It is called once after the child subtrees of a node have all been folded. Its parameters are the current node and the sequence of values obtained for the children.</param>
         /// <typeparam name="F">The return type of <paramref name="f"/>.</typeparam>
         /// <typeparam name="N">The type of <paramref name="node"/>.</typeparam>
-        public static Task<F> Fold<N, F>(this N node, Func<N, IEnumerable<Task<F>>, Task<F>> f) where N : ITreeNode<N>
+        public static Task<F> Fold<N, F>(this ITreeNode<N> node, Func<N, IEnumerable<Task<F>>, Task<F>> f) where N : ITreeNode<N>
         {
             /*
              * This is my best shot so far at a manual implementation. However, I figured that the parallel distribution of work
@@ -185,7 +185,7 @@ namespace Particles
             foreach (var c in node.Children)
                 childTasks[i++] = c.Fold(f);
 
-            return f(node, childTasks);
+            return f((N)node, childTasks);
         }
 
         #endregion
@@ -198,9 +198,9 @@ namespace Particles
         /// </summary>
         /// <param name="node">A tree node.</param>
         /// <typeparam name="N">The type of <paramref name="node"/>.</typeparam>
-        public static int Height<N>(this N node) where N : ITreeNode<N>
+        public static int Height<N>(this ITreeNode<N> node) where N : ITreeNode<N>
         {
-            return node.Fold((N _, IEnumerable<int> chs) => 1 + chs.Max());
+            return node.Fold((N _, IEnumerable<int> chs) => 1 + chs.DefaultIfEmpty().Max());
         }
 
         /// <summary>
@@ -219,7 +219,7 @@ namespace Particles
         /// </summary>
         /// <param name="node">A tree node.</param>
         /// <typeparam name="N">The type of <paramref name="node"/>.</typeparam>
-        public static int Size<N>(this N node) where N : ITreeNode<N>
+        public static int Size<N>(this ITreeNode<N> node) where N : ITreeNode<N>
         {
             return node.Fold((N _, IEnumerable<int> chs) => 1 + chs.Sum());
         }
@@ -239,7 +239,7 @@ namespace Particles
         /// </summary>
         /// <param name="node">A tree node.</param>
         /// <typeparam name="N">The type of <paramref name="node"/>.</typeparam>
-        public static int Width<N>(this N node) where N : ITreeNode<N>
+        public static int Width<N>(this ITreeNode<N> node) where N : ITreeNode<N>
         {
             return node.Fold((N _, IEnumerable<int> chs) => Math.Max(1, chs.Sum()));
         }
@@ -256,5 +256,52 @@ namespace Particles
 
 
         #endregion
+
+        /// <summary>
+        /// Enumerates all the leaves in the subtree under this node.
+        /// </summary>
+        /// <param name="node">A tree node.</param>
+        /// <typeparam name="N">The type of <paramref name="node"/>.</typeparam>
+        public static IEnumerable<N> Leaves<N>(this ITreeNode<N> node) where N : ITreeNode<N>
+        {
+            // We use an explicit stack to avoid a recursive iterator.
+            // Recursive iterators create hassle for the GC and are slow.
+
+            var childrenArray = new N[16];
+
+            var stack = new Stack<N>();
+            stack.Push((N)node);
+
+            while (stack.Any())
+            {
+                var n = stack.Pop();
+                var cc = 0;
+
+                // We need to reverse the children, which is why we store them in an array.
+                foreach (var c in n.Children)
+                {
+                    if (cc == childrenArray.Length)
+                        Array.Resize(ref childrenArray, 2 * childrenArray.Length);
+                    childrenArray[cc++] = c;
+                }
+
+                if (cc == 0)
+                    yield return n;
+                else
+                    while (cc > 0)
+                        stack.Push(childrenArray[--cc]);
+            }
+        }
+
+        /// <summary>
+        /// Enumerates all the leaves of this tree.
+        /// </summary>
+        /// <param name="tree">A tree.</param>
+        /// <typeparam name="N">The type of the nodes in <paramref name="tree"/>.</typeparam>
+        public static IEnumerable<N> Leaves<N>(this ITree<N> tree) where N : ITreeNode<N>
+        {
+            return tree.Root?.Leaves() ?? new N[0];
+        }
+
     }
 }

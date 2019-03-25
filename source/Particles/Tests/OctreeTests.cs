@@ -17,7 +17,7 @@ namespace Tests
         /// <param name="actual">An octree node the subtree under which is expected to be equal to the one under <paramref name="expected"/>.</param>
         /// <typeparam name="T">The type of the items stored in the octrees.</typeparam>
         /// <exception cref="EqualException">If the subtrees are not perfectly equal.</exception>
-        private void Match<T>(IOctreeNode<T> expected, IOctreeNode<T> actual)
+        private void Match<N, T>(N expected, N actual) where N : IIndexNode<N, T>
         {
             if (expected.IsLeaf)
             {
@@ -37,7 +37,7 @@ namespace Tests
                 Assert.Equal(expected.Children.Count(), actual.Children.Count());
 
                 foreach (var p in expected.Children.Zip(actual.Children, (i, j) => (i, j)))
-                    Match(p.Item1, p.Item2);
+                    Match<N, T>(p.Item1, p.Item2);
             }
         }
 
@@ -48,24 +48,24 @@ namespace Tests
         /// <param name="actual">An octree that is expected to be equal to <paramref name="expected"/>.</param>
         /// <typeparam name="T">The type of the items stored in the octrees.</typeparam>
         /// <exception cref="EqualException">If the octrees are not perfectly equal.</exception>
-        private void Match<T>(Octree<T> expected, Octree<T> actual)
+        private void Match<T>(MortonOctree<T> expected, MortonOctree<T> actual)
         {
             if (expected.ItemCount != actual.ItemCount)
                 throw new EqualException(expected.ItemCount, actual.ItemCount);
             if (expected.ItemCount > 0)
-                Match(expected.Root, actual.Root);
+                Match<MortonOctree<T>.INodeReference, T>(expected.Root, actual.Root);
         }
 
         /// <summary>
         /// Asserts that the subtree under the given <paramref name="node"/> does not contain
         /// any internal node except for <paramref name="node"/> that is the only child of its parent.
         /// </summary>
-        /// <param name="node">An octree node.</param>
-        /// <typeparam name="T">The type of the items stored in the octree to which <paramref name="node"/> belongs.</typeparam>
-        private void AssertNoSingleInternalChildren<T>(IOctreeNode<T> node)
+        /// <param name="node">A tree node.</param>
+        /// <typeparam name="N">The type of <paramref name="node"/>.</typeparam>
+        private void AssertNoSingleInternalChildren<N>(N node) where N : ITreeNode<N>
         {
             if (node.Children.Count() == 1)
-                Assert.True(node.Children.First().IsLeaf, "An internal node that is the only child of its parent was found!");
+                Assert.True(node.Children.First().IsLeaf(), "An internal node that is the only child of its parent was found!");
             foreach (var c in node.Children)
                 AssertNoSingleInternalChildren(c);
         }
@@ -75,7 +75,7 @@ namespace Tests
         /// </summary>
         /// <param name="tree">An octree.</param>
         /// <typeparam name="T">The type of the items stored in <paramref name="tree"/>.</typeparam>
-        private void AssertNoSingleInternalChildren<T>(Octree<T> tree)
+        private void AssertNoSingleInternalChildren<T>(MortonOctree<T> tree)
         {
             AssertNoSingleInternalChildren(tree.Root);
         }
@@ -85,7 +85,7 @@ namespace Tests
         {
             var bounds = new AABB(new Vector3(0, 0, 0));
 
-            var ot = new Octree<int>(new (int, Vector3)[0], bounds);
+            var ot = new MortonOctree<int>(new (int, Vector3)[0], bounds);
 
             Assert.Throws(typeof(IndexOutOfRangeException), () => ot.Root);
 
@@ -99,7 +99,7 @@ namespace Tests
         {
             var bounds = new AABB(new Vector3(0, 0, 0));
 
-            var ot = new Octree<int>(new[] { (42, new Vector3(0, 0, 0))}, bounds);
+            var ot = new MortonOctree<int>(new[] { (42, new Vector3(0, 0, 0))}, bounds);
 
             Assert.Equal(1, ot.ItemCount);
 
@@ -140,7 +140,7 @@ namespace Tests
 
             var bounds = new AABB(new Vector3(0, 0, 0), new Vector3(2, 2, 2));
 
-            var ot = new Octree<Vector3>(positions.Zip(positions, (a, b) => (a, b)), bounds);
+            var ot = new MortonOctree<Vector3>(positions.Zip(positions, (a, b) => (a, b)), bounds);
 
             Assert.Equal(positions.Length, ot.ItemCount);
 
@@ -156,32 +156,6 @@ namespace Tests
             var cot = await ot.CompressMemory();
 
             Match(ot, cot);
-        }
-
-        /// <summary>
-        /// Computes the height of the given node, i.e. the number of nodes that are visited on the longest
-        /// path from the given node to one of the leaves in its subtree. If the given node is a leaf, its height is 1.
-        /// </summary>
-        /// <param name="node">An octree node.</param>
-        /// <typeparam name="T">The type of the octree items.</typeparam>
-        private static int height<T>(IOctreeNode<T> node)
-        {
-            var maxChildHeight = 0;
-            foreach (var c in node.Children)
-                maxChildHeight = Math.Max(maxChildHeight, height(c));
-
-            return 1 + maxChildHeight;
-        }
-
-        /// <summary>
-        /// Computes the height of the given octree, i.e. the number of nodes that are visited on the longest path
-        /// from the root to one of the leaves. The empty tree has height 0, trees with only one node have height 1.
-        /// </summary>
-        /// <param name="t">An octree.</param>
-        /// <typeparam name="T">The type of the octree items.</typeparam>
-        private static int height<T>(Octree<T> t)
-        {
-            return t.ItemCount == 0 ? 0 : height(t.Root);
         }
 
         /// <summary>
@@ -223,7 +197,7 @@ namespace Tests
 
             var bounds = new AABB(new Vector3(0, 0, 0), new Vector3(2, 2, 2));
 
-            var ot = new Octree<Vector3>(positions.Zip(positions, (a, b) => (a, b)), bounds);
+            var ot = new MortonOctree<Vector3>(positions.Zip(positions, (a, b) => (a, b)), bounds);
 
             Assert.Equal(positions.Length, ot.ItemCount);
 
@@ -231,7 +205,7 @@ namespace Tests
 
             Assert.False(r.IsLeaf);
             Assert.True(pSet.SetEquals(from p in r.Items select p.Item1));
-            Assert.Equal(5, height(ot));
+            Assert.Equal(5, ot.Height());
 
             var layer1 = r.Children.ToArray();
             var layer2 = (from n in layer1 from c in n.Children select c).ToArray();

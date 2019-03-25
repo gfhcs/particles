@@ -3,48 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Immutable;
-using System.Collections.Concurrent;
 
 namespace Particles
-{   
+{
     /// <summary>
-    /// Represents a node in an octree.
+    /// A tree each node of which represents an axis-aligned bounding box (AABB) in three-dimensional-space.
+    /// Each node can have up to 8 children that subdivide the AABB of their parent into smaller AABB's.
+    /// Each node contains either at least one out of a universe of objects, or has at least two children.
     /// </summary>
-    public interface IOctreeNode<T>
-    {
-        /// <summary>
-        /// Enumerates the child nodes of this node.
-        /// </summary>
-        IEnumerable<IOctreeNode<T>> Children
-        { get; }
-
-        /// <summary>
-        /// Enumerates all the items along with their positions that lie within
-        /// the spatial range represented by this node.
-        /// </summary>
-        IEnumerable<(T, Vector3)> Items
-        { get; }
-
-        /// <summary>
-        /// Indicates whether this node is a leaf node.
-        /// </summary>
-        bool IsLeaf
-        { get; }
-    }
-
-    /// <summary>
-    /// A tree each node of which represents a subset of three-dimensional-space.
-    /// Each node can have up to 8 children (hence the name).
-    /// The space represented by a node is an axis-aligned bounding box (AABB).
-    /// The tree is created for a set of objects that each have position in space.
-    /// Each node volume contains at least one of these objects.
-    /// </summary>
-    /// <remarks>
-    /// This class does not allow decorating the nodes of the tree. For this use
-    /// the class <see cref="LabelledOctree"/> (not existing yet).
-    /// </remarks>
     /// <typeparam name="T">The type of the objects scattered across space.</typeparam>
-    public class Octree<T>
+    public class MortonOctree<T> : ISpatialIndex<MortonOctree<T>.INodeReference, T>
     {
         #region "Morton code"
         private const uint MAX = 2097152; // 2^21
@@ -301,9 +269,16 @@ namespace Particles
         /// <summary>
         /// A reference to one of the nodes of an Octree.
         /// </summary>
-        protected struct NodeReference : IOctreeNode<T>
+        public interface INodeReference : IIndexNode<INodeReference, T>
         {
-            private readonly Octree<T> owner;
+        }
+
+        /// <summary>
+        /// A reference to one of the nodes of an Octree.
+        /// </summary>
+        protected struct NodeReference : INodeReference
+        {
+            private readonly MortonOctree<T> owner;
             private readonly int index;
 
             /// <summary>
@@ -314,7 +289,7 @@ namespace Particles
             /// The index of the node this reference points to. Positive indices point into <see cref="internalNodes"/>,
             /// while negative indices point into <see cref="leafNodes"/>, where -1 refers to the last element.
             /// </param>
-            public NodeReference(Octree<T> owner, int index)
+            public NodeReference(MortonOctree<T> owner, int index)
             {
                 this.owner = owner;
                 this.index = index;
@@ -324,7 +299,7 @@ namespace Particles
             /// The octree into which this reference points.
             /// </summary>
             /// <value>The owner.</value>
-            public Octree<T> Owner
+            public MortonOctree<T> Owner
             {
                 get
                 {
@@ -360,11 +335,11 @@ namespace Particles
                 }
             }
 
-            IEnumerable<IOctreeNode<T>> IOctreeNode<T>.Children
+            IEnumerable<INodeReference> ITreeNode<INodeReference>.Children
             {
                 get
                 {
-                    return this.Children.Cast<IOctreeNode<T>>();
+                    return this.Children.Cast<INodeReference>();
                 }
             }
 
@@ -384,22 +359,30 @@ namespace Particles
             /// <summary>
             /// Returns the index of the first item below the subtree identified by this node reference.
             /// </summary>
-            public int FirstItemIndex
+            private int FirstItemIndex
             {
                 get
                 {
-                    return IsLeaf ? index : Children.First().FirstItemIndex;
+                    return IsLeaf ? index : this.Children.First().FirstItemIndex;
                 }
             }
 
             /// <summary>
             /// Returns the index of the last item below the subtree identified by this node reference.
             /// </summary>
-            public int LastItemIndex
+            private int LastItemIndex
             {
                 get
                 {
                     return IsLeaf ? index : this.Children.Last().LastItemIndex;
+                }
+            }
+
+            public int Arity
+            {
+                get
+                {
+                    return this.Children.Count();
                 }
             }
 
@@ -410,6 +393,7 @@ namespace Particles
                     return index < 0;
                 }
             }
+
 
             public override string ToString()
             {
@@ -615,7 +599,7 @@ namespace Particles
         /// </summary>
         /// <param name="leafNodes">The leaf nodes of this octree.</param>
         /// <param name="internalNodes">The internal nodes of this octree.</param>
-        protected Octree(ImmutableArray<LeafNode> leafNodes, ImmutableArray<InternalNode> internalNodes)
+        protected MortonOctree(ImmutableArray<LeafNode> leafNodes, ImmutableArray<InternalNode> internalNodes)
         {
             this.leafNodes = leafNodes;
             this.internalNodes = internalNodes;
@@ -628,7 +612,7 @@ namespace Particles
         /// </summary>
         /// <param name="objectsAndPositions">The objects to be indexed by this tree, along with their positions.</param>
         /// <param name="bounds">The bounds of the space to be covered by the octree. All objects must be contained in this space!</param>
-        public Octree(IEnumerable<(T, Vector3)> objectsAndPositions, AABB bounds)
+        public MortonOctree(IEnumerable<(T, Vector3)> objectsAndPositions, AABB bounds)
         {
             // Create leaf nodes:
             var leaves = objectsAndPositions.Select((op) => new LeafNode(op.Item1, op.Item2)).ToArray();
@@ -663,14 +647,14 @@ namespace Particles
             for (int i = 0; i < internalNodes.Length; i++) {
                 var ir = new NodeReference(this, i);
                 if (ir.Children.Count() == 1 && !ir.Children.First().IsLeaf)
-                    throw new Exception(string.Format("This octree contains an internal node that is the only child of its parent! This constitutes a bug in the implementation of {0}!", nameof(Octree<T>)));
+                    throw new Exception(string.Format("This octree contains an internal node that is the only child of its parent! This constitutes a bug in the implementation of {0}!", nameof(MortonOctree<T>)));
             }
         }
 
         /// <summary>
         /// The root node of this octree, representing the whole space.
         /// </summary>
-        public IOctreeNode<T> Root
+        public INodeReference Root
         {
             get
             {
@@ -924,7 +908,7 @@ namespace Particles
         /// Compressing memory takes time, but reduces the amount of memory occupied by the octree.
         /// Furthermore, compressed octrees usually exhibit faster node accesses, because caches are used more efficiently.
         /// </remarks>
-        public Task<Octree<T>> CompressMemory()
+        public Task<MortonOctree<T>> CompressMemory()
         {
             return Task.Run(async () =>
             {
@@ -965,7 +949,7 @@ namespace Particles
                 Parallel.For(0, leafNodes.Length, (i) => shiftLeaf(leafNodes, chunkShifts, stride, shifts, i, newLeafNodes));
                 Parallel.For(0, internalNodes.Length, (i) => shiftInternal(internalNodes, chunkShifts, stride, shifts, i, newInternalNodes));
 
-                return new Octree<T>(newLeafNodes.ToImmutableArray(), newInternalNodes.ToImmutableArray());
+                return new MortonOctree<T>(newLeafNodes.ToImmutableArray(), newInternalNodes.ToImmutableArray());
             });
         }
 
