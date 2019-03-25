@@ -57,27 +57,53 @@ namespace Tests
         }
 
         /// <summary>
-        /// Asserts that the subtree under the given <paramref name="node"/> does not contain
-        /// any internal node except for <paramref name="node"/> that is the only child of its parent.
-        /// </summary>
-        /// <param name="node">A tree node.</param>
-        /// <typeparam name="N">The type of <paramref name="node"/>.</typeparam>
-        private void AssertNoSingleInternalChildren<N>(N node) where N : ITreeNode<N>
-        {
-            if (node.Children.Count() == 1)
-                Assert.True(node.Children.First().IsLeaf(), "An internal node that is the only child of its parent was found!");
-            foreach (var c in node.Children)
-                AssertNoSingleInternalChildren(c);
-        }
-
-        /// <summary>
-        /// Asserts that the given octree does not contain any internal node that is the only child of its parent.
+        /// Asserts that the given <paramref name="tree"/>  satisfies all the invariants of an octree.
         /// </summary>
         /// <param name="tree">An octree.</param>
         /// <typeparam name="T">The type of the items stored in <paramref name="tree"/>.</typeparam>
-        private void AssertNoSingleInternalChildren<T>(MortonOctree<T> tree)
+        private void AssertOctreeInvariants<T>(MortonOctree<T> tree)
         {
-            AssertNoSingleInternalChildren(tree.Root);
+            AABB visit(MortonOctree<T>.INodeReference node)
+            {
+                var cc = node.Arity;
+
+                if (cc == 0)
+                {
+                    Assert.True(node.IsLeaf);
+                    Assert.True(node.IsLeaf());
+                    Assert.Equal(0, node.Children.Count());
+
+                    Assert.True(node.Items.Any(), "A leaf node that does not contain any items was found!");
+
+                    return (from p in node.Items select new AABB(p.Item2)).Aggregate(AABB.Bound);
+                }
+                else
+                {
+                    Assert.False(node.IsLeaf);
+                    Assert.False(node.IsLeaf());
+                    Assert.True(cc <= 8, "A node with more than 8 children was found!");
+                    Assert.True(2 <= cc, "A node with only a single child was found!");
+
+                    var childBoxes = (from c in node.Children select visit(c)).ToArray();
+
+                    Assert.Equal(cc, childBoxes.Length);
+
+                    var childUnion = childBoxes.Aggregate(AABB.Bound);
+
+                    var parentBox = (from p in node.Items select new AABB(p.Item2)).Aggregate(AABB.Bound);
+
+                    Assert.Equal(parentBox, childUnion);
+
+                    for (int i = 0; i < childBoxes.Length; i++)
+                        for (int j = 0; j < childBoxes.Length; j++)
+                            if (i != j)
+                                Assert.True(AABB.Intersect(childBoxes[i], childBoxes[j]).IsEmpty);
+
+                    return parentBox;
+                }
+            }
+
+            visit(tree.Root);
         }
 
         [Fact()]
@@ -151,7 +177,7 @@ namespace Tests
             Assert.True(pSet.SetEquals(from p in r.Items select p.Item2));
             Assert.True(pSet.SetEquals(from c in r.Children from p in c.Items select p.Item1));
 
-            AssertNoSingleInternalChildren(r);
+            AssertOctreeInvariants(ot);
 
             var cot = await ot.CompressMemory();
 
@@ -224,7 +250,37 @@ namespace Tests
             Assert.Equal(2, layer4.Count((n) => n.IsLeaf));
             Assert.Equal(0, layer5.Length);
 
-            AssertNoSingleInternalChildren(r);
+            AssertOctreeInvariants(ot);
+
+            var cot = await ot.CompressMemory();
+
+            Match(ot, cot);
+        }
+
+        [Theory()]
+        [InlineData(10, 100, 1000, 10000)]
+        public async Task TestRandom(int n)
+        {
+            // Create objects at random locations in [0, 1]^3 : 
+            var positions = new Vector3[n];
+            var rnd = new Random();
+            for (int i = 0; i < n; i++)
+                positions[i] = new Vector3(rnd.NextDouble(), rnd.NextDouble(), rnd.NextDouble());
+
+            var pSet = new HashSet<Vector3>(positions);
+
+            var bounds = new AABB(new Vector3(0, 0, 0), new Vector3(1, 1, 1));
+
+            var ot = new MortonOctree<Vector3>(positions.Zip(positions, (a, b) => (a, b)), bounds);
+
+            Assert.Equal(positions.Length, ot.ItemCount);
+
+            var r = ot.Root;
+
+            Assert.False(r.IsLeaf);
+            Assert.True(pSet.SetEquals(from p in r.Items select p.Item1));
+
+            AssertOctreeInvariants(ot);
 
             var cot = await ot.CompressMemory();
 

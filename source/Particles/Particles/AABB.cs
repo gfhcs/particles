@@ -48,9 +48,43 @@ namespace Particles
             return new AABB(on, sn);
         }
 
+        /// <summary>
+        /// Computes the intersection of two AABB's.
+        /// </summary>
+        /// <param name="a">An AABB.</param>
+        /// <param name="b">An AABB.</param>
+        public static AABB Intersect(AABB a, AABB b)
+        {
+            var startA = a.Origin;
+            var startB = b.Origin;
+            var endA = a.Origin + a.Size;
+            var endB = a.Origin + b.Size;
+
+            var ox = Math.Max(startA.X, startB.X);
+            var sx = Math.Max(0, Math.Min(endA.X, endB.X) - ox);
+            var oy = Math.Max(startA.Y, startB.Y);
+            var sy = Math.Max(0, Math.Min(endA.Y, endB.Y) - oy);
+            var oz = Math.Max(startA.Z, startB.Z);
+            var sz = Math.Max(0, Math.Min(endA.Z, endB.Z) - oz);
+
+            return new AABB(new Vector3(ox, oz, oz), new Vector3(sx, sy, sz));
+        }
+
         public bool Equals(AABB other)
         {
+            if (this.IsEmpty) return other.IsEmpty;
+            if (other.IsEmpty) return false;
             return this.origin.Equals(other.origin) && this.size.Equals(other.size);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is AABB && this.Equals((AABB)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return (size.X * size.Y * size.Z).GetHashCode();
         }
 
         /// <summary>
@@ -67,11 +101,25 @@ namespace Particles
         /// <summary>
         /// The size of the bounding box in all dimensions.
         /// </summary>
+        /// <remarks>
+        /// All the components of this vector are guaranteed to be nonnegative!
+        /// </remarks>
         public Vector3 Size
         {
             get
             {
                 return size;
+            }
+        }
+
+        /// <summary>
+        /// Indicates if this AABB is empty, i.e. has a volume of zero.
+        /// </summary>
+        public bool IsEmpty
+        {
+            get
+            {
+                return size.X * size.Y * size.Z < 1E-100;
             }
         }
     }
