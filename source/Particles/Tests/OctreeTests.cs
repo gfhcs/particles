@@ -258,7 +258,10 @@ namespace Tests
         }
 
         [Theory()]
-        [InlineData(10, 100, 1000, 10000)]
+        [InlineData(10)]
+        [InlineData(100)]
+        [InlineData(1000)]
+        [InlineData(10000)]
         public async Task TestRandom(int n)
         {
             // Create objects at random locations in [0, 1]^3 : 
