@@ -18,6 +18,13 @@ namespace Particles
         /// <param name="size">The size of the bounding box in all dimensions.</param>
         public AABB(Vector3 origin, Vector3 size)
         {
+            if (size.X < 0 || size.Y < 0 || size.Z < 0)
+            {
+                var a = origin;
+                var b = origin + size;
+                origin = new Vector3(Math.Min(a.X, b.X), Math.Min(a.Y, b.Y), Math.Min(a.Z, b.Z));
+                size = new Vector3(Math.Max(a.X, b.X), Math.Max(a.Y, b.Y), Math.Max(a.Z, b.Z)) - origin;
+            }
             this.origin = origin;
             this.size = size;
         }
@@ -119,7 +126,7 @@ namespace Particles
         {
             get
             {
-                return Math.Abs(size.X) < double.Epsilon && Math.Abs(size.Y) < double.Epsilon && Math.Abs(size.Z) < double.Epsilon;
+                return size.X < double.Epsilon && size.Y < double.Epsilon && size.Z < double.Epsilon;
             }
         }
     }
