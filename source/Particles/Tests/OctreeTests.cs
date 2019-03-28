@@ -69,8 +69,8 @@ namespace Tests
 
                 if (cc == 0)
                 {
-                    Assert.True(node.IsLeaf);
-                    Assert.True(node.IsLeaf());
+                    Assert.True(node.IsLeaf, "A node that reported to have arity zero did not report to be a leaf node!");
+                    Assert.True(node.IsLeaf(), "A node that reported to have arity zero did not report to be a leaf node!");
                     Assert.Equal(0, node.Children.Count());
 
                     Assert.True(node.Items.Any(), "A leaf node that does not contain any items was found!");
@@ -79,8 +79,8 @@ namespace Tests
                 }
                 else
                 {
-                    Assert.False(node.IsLeaf);
-                    Assert.False(node.IsLeaf());
+                    Assert.False(node.IsLeaf, string.Format("A node that reported to have arity {0} reported to be a leaf node!", cc));
+                    Assert.False(node.IsLeaf(), string.Format("A node that reported to have arity {0} reported to be a leaf node!", cc));
                     Assert.True(cc <= 8, "A node with more than 8 children was found!");
                     Assert.True(2 <= cc, "A node with only a single child was found!");
 
@@ -97,7 +97,7 @@ namespace Tests
                     for (int i = 0; i < childBoxes.Length; i++)
                         for (int j = 0; j < childBoxes.Length; j++)
                             if (i != j)
-                                Assert.True(AABB.Intersect(childBoxes[i], childBoxes[j]).IsEmpty);
+                                Assert.True(AABB.Intersect(childBoxes[i], childBoxes[j]).IsEmpty, "A node with two intersecting child boxes was found!");
 
                     return parentBox;
                 }
