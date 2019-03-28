@@ -92,6 +92,16 @@ namespace Tests
 
                     var parentBox = (from p in node.Items select new AABB(p.Item2)).Aggregate(AABB.Bound);
 
+                    // Partent box and smallest upper bound of the child boxes should be the same:
+                    var dox = parentBox.Origin.X - childUnion.Origin.X;
+                    var doy = parentBox.Origin.Y - childUnion.Origin.Y;
+                    var doz = parentBox.Origin.Z - childUnion.Origin.Z;
+                    var dsx = parentBox.Size.X - childUnion.Size.X;
+                    var dsy = parentBox.Size.Y - childUnion.Size.Y;
+                    var dsz = parentBox.Size.Z - childUnion.Size.Z;
+
+                    Assert.True(Math.Abs(dox * doy * doz) < 1E-300 && Math.Abs(dsx * dsy * dsz) < 1E-300, "A node was found where the smallest AABB containing all its items is equal to smallest AABB containing all the child boxes!");
+
                     Assert.Equal(parentBox, childUnion);
 
                     for (int i = 0; i < childBoxes.Length; i++)
