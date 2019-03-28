@@ -126,7 +126,7 @@ namespace Particles
         {
             get
             {
-                return size.X < double.Epsilon && size.Y < double.Epsilon && size.Z < double.Epsilon;
+                return size.X < double.Epsilon || size.Y < double.Epsilon || size.Z < double.Epsilon;
             }
         }
 
