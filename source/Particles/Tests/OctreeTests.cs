@@ -107,7 +107,13 @@ namespace Tests
                     for (int i = 0; i < childBoxes.Length; i++)
                         for (int j = 0; j < childBoxes.Length; j++)
                             if (i != j)
-                                Assert.True(AABB.Intersect(childBoxes[i], childBoxes[j]).IsEmpty, "A node with two intersecting child boxes was found!");
+                            {
+                                var box1 = childBoxes[i];
+                                var box2 = childBoxes[j];
+                                var x = AABB.Intersect(box1, box2);
+
+                                Assert.True(x.IsEmpty, string.Format("A node with two intersecting child boxes was found: The intersection of {0} and {1} is {2}", box1, box2, x));
+                            }
 
                     return parentBox;
                 }
