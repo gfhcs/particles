@@ -102,8 +102,6 @@ namespace Tests
 
                     Assert.True(Math.Abs(dox * doy * doz) < 1E-300 && Math.Abs(dsx * dsy * dsz) < 1E-300, "A node was found where the smallest AABB containing all its items is equal to smallest AABB containing all the child boxes!");
 
-                    Assert.Equal(parentBox, childUnion);
-
                     for (int i = 0; i < childBoxes.Length; i++)
                         for (int j = 0; j < childBoxes.Length; j++)
                             if (i != j)
