@@ -58,7 +58,7 @@ namespace Particles
             var startA = a.Origin;
             var startB = b.Origin;
             var endA = a.Origin + a.Size;
-            var endB = a.Origin + b.Size;
+            var endB = b.Origin + b.Size;
 
             var ox = Math.Max(startA.X, startB.X);
             var sx = Math.Max(0, Math.Min(endA.X, endB.X) - ox);
