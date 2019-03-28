@@ -119,7 +119,7 @@ namespace Particles
         {
             get
             {
-                return size.X * size.Y * size.Z < 1E-100;
+                return Math.Abs(size.X) < double.Epsilon && Math.Abs(size.Y) < double.Epsilon && Math.Abs(size.Z) < double.Epsilon;
             }
         }
     }
