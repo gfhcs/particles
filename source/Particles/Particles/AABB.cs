@@ -129,5 +129,10 @@ namespace Particles
                 return size.X < double.Epsilon && size.Y < double.Epsilon && size.Z < double.Epsilon;
             }
         }
+
+        public override string ToString()
+        {
+            return string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0}x{1}x{2}@{3}", origin.X, origin.Y, origin.Z, size);
+        }
     }
 }

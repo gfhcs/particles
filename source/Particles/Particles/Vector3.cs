@@ -85,7 +85,7 @@ namespace Particles
 
         public override string ToString()
         {
-            return string.Format("({0}, {1}, {2})", x, y, z);
+            return string.Format(System.Globalization.CultureInfo.InvariantCulture, "({0}, {1}, {2})", x, y, z);
         }
 
         #region "Arithmetic"

@@ -92,7 +92,7 @@ namespace Tests
 
         public override string ToString()
         {
-            return string.Format("{0}sps, {1}rps, {2}s in total", simulationTime.Rate, renderingTime.Rate, totalTime);
+            return string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0}sps, {1}rps, {2}s in total", simulationTime.Rate, renderingTime.Rate, totalTime);
         }
     }
 }

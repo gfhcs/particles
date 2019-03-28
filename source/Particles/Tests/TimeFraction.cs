@@ -108,7 +108,7 @@ namespace Tests
 
         public override string ToString()
         {
-            return string.Format("{0} steps in {1}s", stepCount, time);
+            return string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0} steps in {1}s", stepCount, time);
         }
     }
 }

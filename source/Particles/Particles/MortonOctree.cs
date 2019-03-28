@@ -210,7 +210,7 @@ namespace Particles
 
             public override string ToString()
             {
-                return string.Format("{0} at {1}", item, position);
+                return string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0} at {1}", item, position);
             }
         }
 
