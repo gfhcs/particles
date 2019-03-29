@@ -436,7 +436,7 @@ namespace Particles
             if (y - x < 0)
                 throw new ArgumentException(string.Format("{0} must not be less than {1} !", nameof(y), nameof(x)), nameof(y));
 
-            if (digit(power, mortonCodes[x]))
+            if (y == x || digit(power, mortonCodes[x]))
                 return x;
 
             for (var dd = divUp(y - x, 2); dd != 0; dd = divUp(dd, 2))
