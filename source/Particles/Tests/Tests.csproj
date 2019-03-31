@@ -47,11 +47,11 @@
     <Reference Include="mscorlib" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Test.cs" />
-    <Compile Include="MachineInfo.cs" />
-    <Compile Include="TimeFraction.cs" />
-    <Compile Include="TestPerformance.cs" />
-    <Compile Include="OctreeTests.cs" />
+    <Compile Include="util\MachineInfo.cs" />
+    <Compile Include="util\PerformanceTest.cs" />
+    <Compile Include="util\TimeFraction.cs" />
+    <Compile Include="suites\OctreeTests.cs" />
+    <Compile Include="suites\SimulationTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -61,6 +61,10 @@
       <Project>{EF2D2CB4-9026-41F1-B8DC-516DD9F6E15E}</Project>
       <Name>Particles</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="util\" />
+    <Folder Include="suites\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

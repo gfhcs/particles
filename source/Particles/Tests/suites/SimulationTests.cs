@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Tests
 {
-    public class Test
+    public class SimulationTests
     {
         private const double au = 149597870700.0;
 
@@ -69,7 +69,7 @@ namespace Tests
         /// <param name="expectedPerformance">
         /// The expected performance of the test case on the executing machine.
         /// </param>
-        private async Task<TestPerformance> TestSimulation(BallCloud initialState,
+        private async Task<PerformanceTest> TestSimulation(BallCloud initialState,
                                           IIntegrator<BallCloud, BallCloudGradient> integrator,
                                           string fileName,
                                           int w = 800,
@@ -79,7 +79,7 @@ namespace Tests
                                           double stepSize = 86400,
                                           double visualDuration = 60.0,
                                           double simulatedDuration = 365 * 86400,
-                                          TestPerformance expectedPerformance = default(TestPerformance))
+                                          PerformanceTest expectedPerformance = default(PerformanceTest))
         {
             var path = string.Format("/tmp/{0}", fileName);
             var file = new FileStream(path, FileMode.Create);
@@ -88,7 +88,7 @@ namespace Tests
 
             var dt = (simulatedDuration / visualDuration) / fps;
 
-            var performance = new TestPerformance();
+            var performance = new PerformanceTest();
 
             var expectedSPS = expectedPerformance.SimulationTime.Rate;
             var expectedRPS = expectedPerformance.RenderingTime.Rate;
@@ -299,7 +299,7 @@ namespace Tests
         /// <param name="expectedPerformance">
         /// The expected performance of the test case on the executing machine.
         /// </param>
-        Task<TestPerformance> TestRandomCloud(int n, double size, double mass, double radius, double internalEnergy, double stepSize, double simulatedDuration, TestPerformance expectedPerformance = default(TestPerformance))
+        Task<PerformanceTest> TestRandomCloud(int n, double size, double mass, double radius, double internalEnergy, double stepSize, double simulatedDuration, PerformanceTest expectedPerformance = default(PerformanceTest))
         {
             int w = 1920;
             int h = 1080;
@@ -473,7 +473,7 @@ namespace Tests
             var sRate = TimeFraction.FromRate(sps);
             var rRate = TimeFraction.FromRate(rps);
 
-            var expectedPerformance = new TestPerformance(sRate, rRate, T);
+            var expectedPerformance = new PerformanceTest(sRate, rRate, T);
 
             await TestRandomCloud(n, s, n * m, r, n * 0.5 * m * v * v, d, D, expectedPerformance);
         }
