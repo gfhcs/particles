@@ -376,7 +376,7 @@ namespace Tests
         /// A minimal random cloud, of 100 particles.
         /// </summary>
         [Fact()]
-        public void TestCloud1()
+        public async Task TestCloud1()
         {
             var n = 100;
             var m = 7.342E22; // Mass of the moon
@@ -385,7 +385,7 @@ namespace Tests
             var s = 2 * 385001000.0; // multiple distance between Moon and Earth
             var d = 1 * 3600.0; // 1 hour
             var D = 10 * 12 * 30 * 86400.0; // 10 years
-            TestRandomCloud(n, s, n * m, r, n * 0.5 * m * v * v, d, D);
+            await TestRandomCloud(n, s, n * m, r, n * 0.5 * m * v * v, d, D);
         }
 
         /// <summary>
