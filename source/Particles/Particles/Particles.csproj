@@ -54,6 +54,7 @@
     <Compile Include="AABB.cs" />
     <Compile Include="ITree.cs" />
     <Compile Include="ISpatialIndex.cs" />
+    <Compile Include="Util.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

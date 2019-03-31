@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Collections.Immutable;
 
 namespace Particles
 {
@@ -231,7 +231,7 @@ namespace Particles
             /// <summary>
             /// A delta to be added to the index of this node in order to obtain the
             /// index of the first child of this node.
-            /// Indices below zero indicate
+            /// Indices (not deltas!!!) below zero indicate
             /// that the child is to be found in <see cref="leafNodes"/>.
             /// </summary>
             public int FirstChildDelta
@@ -253,6 +253,20 @@ namespace Particles
             /// Indices below zero indicate
             /// that the sibling is to be found in <see cref="leafNodes"/>.
             /// </summary>
+            /// <remarks>
+            /// During construction of the Octree, this value will be set to -1 for all nodes
+            /// that are not reachable from the root node. None of the reachable nodes can happen to have
+            /// -1 here, because of the following case analysis:
+            /// Case 1: The current node does not have a right sibling. In that case this property returns 0.
+            /// Case 2: The current node has a right sibling that is an internal node. Then this internal node 
+            ///         is guaranteed to have an index greater than the index of the current node and this property
+            ///         needs to return a positive value.
+            /// Case 3: The current node has a right sibling that is a leaf node. Then this leaf node is guaranteed
+            ///         to have a negative index, while the current node has a nonnegative index. Thus this property must
+            ///         return a negative value. Assmuing this value to be -1 would mean that the current node would have
+            ///         to be the root node of the tree. The root node of the tree however can only return 0 for this property
+            ///         because clearly Case 1 applies.
+            /// </remarks>
             public int RightSiblingDelta
             {
                 get
@@ -331,6 +345,9 @@ namespace Particles
                         idx += delta;
                         yield return new NodeReference(owner, idx);
                         delta = idx < 0 ? owner.leafNodes[owner.leafNodes.Length + idx].RightSiblingDelta : owner.internalNodes[idx].RightSiblingDelta;
+
+                        if (delta == -1)
+                            throw new Exception("The node this reference points to reports -1 as the offset between itself and its right sibling node in the internal representation of the octree. Nodes that do this never be accessible from outside the octree, so this condition constitutes a bug in the octree implementation!");
                     }
                 }
             }
@@ -458,7 +475,6 @@ namespace Particles
         /// This method is safe to be called for all leaf indices (<paramref name="i"/>) in parallel. After this method has been called for
         /// all leaf indices, the arras <paramref name="leaves"/> and <paramref name="internalNodes"/> are completely initialized.
         /// </remarks>
-        /// <returns>A task object that can be awaited.</returns>
         /// <param name="mortonCodes">The sorted array of Morton codes for the objects indexed by the octree. May contain duplicates.</param>
         /// <param name="leaves">The array in which leave nodes for the octree are to be stored.</param>
         /// <param name="i">The index of a leaf node. An internal node with the same index (in <paramref name="internalNodes"/> will be created.</param>
@@ -576,9 +592,19 @@ namespace Particles
                 else
                 {
                     var cidx = start; // Position of our child node. It's at the *start* of its leaf range! (because our internal node might sit at the end!)
-                    // If our child node represents only a single morton code, it is a leaf node and not an internal node:
-                    if (end - start == 1)
+
+                    if (end - start == 1) // If our child node represents only a single morton code, it is a leaf node and not an internal node: 
                         cidx -= leaves.Length;
+                    else
+                    {
+                        // The current child range is represented by an internal node.
+                        // If this child is neither our first, nor our last child, there
+                        // are *two* internal nodes that could potentially represent it. 
+                        // Since we select only one of the two, the other one must be marked
+                        // unreachable.
+                        if (end < j)
+                            internalNodes[end - 1].RightSiblingDelta = -1;
+                    }
 
                     if (pred < 0) // Previous child is a leaf node
                         leaves[leaves.Length + pred].RightSiblingDelta = cidx - pred;
@@ -632,6 +658,8 @@ namespace Particles
             var internals = new InternalNode[leaves.Length];
 
             Parallel.For(0, internals.Length, (i) => createInternalNode(mcs, i, leaves, internals));
+
+            internals[internals.Length - 1].RightSiblingDelta = -1; // We could use that node as our root, but we don't do so.
 
             this.leafNodes = leaves.ToImmutableArray();
             this.internalNodes = internals.ToImmutableArray();
@@ -706,160 +734,23 @@ namespace Particles
         #region "Compression"
 
         /// <summary>
-        /// Determines which nodes in the subtree under <paramref name="root"/> are reachable from <paramref name="root"/>.
-        /// </summary>
-        /// <returns>A computation that writes to <paramref name="shifts"/>.</returns>
-        /// <param name="root">An octree node.</param>
-        /// <param name="shifts">An array that after this computation indicates which internal nodes are reachable from <paramref name="root"/>: If the internal node at index i is reachable
-        /// the cell at index i will be positive. Otherwise the value remains unchanged.</param>
-        private static Task reach (NodeReference root, int[] shifts)
-        {
-            var tasks = new Task[Environment.ProcessorCount];
-            var wakeups = new List<TaskCompletionSource<(NodeReference, int)>>();
-
-            /// <summary>
-            /// Traverses the subtree under <paramref name="n"/>.
-            /// </summary>
-            /// <param name="n">An octree node.</param>
-            /// <param name="depth">The depth of <paramref name="n"/>, relative to <paramref name="root"/>.</param>
-            /// <param name="maxPassOnDepth">The maximum depth up to which a task should check if nodes can be passed to other, waiting tasks.</param>
-            void traverse(NodeReference n, int depth, int maxPassOnDepth)
-            {
-                if (n.IsLeaf)
-                    return;
-
-                shifts[n.Index] = 1;
-
-                using (var e = n.Children.GetEnumerator())
-                {
-                    bool childrenRemaining = e.MoveNext();
-                    if (depth <= maxPassOnDepth)
-                        lock (wakeups)
-                        {
-                            while (childrenRemaining && wakeups.Count > 0)
-                            {
-                                var w = wakeups.Last();
-                                wakeups.RemoveAt(wakeups.Count - 1);
-                                w.SetResult((e.Current, depth + 1));
-
-                                childrenRemaining = e.MoveNext();
-                            }
-                        }
-
-                    for (; childrenRemaining; childrenRemaining = e.MoveNext())
-                        traverse(e.Current, depth + 1, maxPassOnDepth);
-                }
-            }
-
-            bool rootAdded = false;
-            
-            // On average, we expect each internal node to have 4 children.
-            var expectedHeight = (int)(Math.Log(shifts.Length) / Math.Log(4));
-            var maxPassOn = Math.Max(0, Math.Min(expectedHeight - 3, (int)(Math.Log(Environment.ProcessorCount * Environment.ProcessorCount) / Math.Log(4))));
-
-            for (int i = 0; i < tasks.Length; i++)
-            {
-                tasks[i] = Task.Run(async () =>
-                {
-                    while (true)
-                    {
-                        var tcs = new TaskCompletionSource<(NodeReference, int)>();
-
-                        lock (wakeups)
-                        {
-                            if (!rootAdded)
-                            {
-                                rootAdded = true;
-                                tcs.SetResult((root, 0));
-                            }
-                            else
-                                wakeups.Add(tcs);
-
-                            if (wakeups.Count == tasks.Length)
-                            {
-                                foreach (var w in wakeups)
-                                    w.SetCanceled();
-                            }
-                        }
-
-                        try
-                        {
-                            var nodeAtDepth = await tcs.Task;
-                            traverse(nodeAtDepth.Item1, nodeAtDepth.Item2, maxPassOn);
-                        }
-                        catch (TaskCanceledException)
-                        {
-                            return;
-                        }
-                    }
-                });
-            }
-
-            return Task.WhenAll(tasks);
-        }
-
-        /// <summary>
-        /// Computes by how much internal nodes should be shifted based on whether they are actually reachable from the root of the octree.
-        /// </summary>
-        /// <returns>The shift that should be used for the element immediately following the range delimited by <paramref name="startIndex"/> and <paramref name="count"/>, i.e. a negative number 
-        /// that indicates the number of unreachable nodes in the chunk considered by this call.</returns>
-        /// <param name="shifts">
-        /// An array that stores 1 for every internal node that is reachable from the root of an octree and 0 for all other internal nodes.
-        /// After this call, each cell that represents a reachable node will contain a (negative) delta value indicating by how much the internal
-        /// node should be shifted in order to compact the array of internal nodes such that no gaps of unreachable nodes remain.
-        /// Cells representing unreachable nodes will receive the value <see cref="Int32.MinValue"/>.
-        /// </param>
-        /// <remarks>
-        /// After this call, all values in <paramref name="shifts"/> will be negative! Note that <see cref="Int32.MinValue"/> was chosen for unreachable
-        /// notes because managed arrays can only hold - <see cref="Int32.MinValue"/> - 1 elements. This means that confusing <see cref="Int32.MinValue"/> for
-        /// an actual shift value is guaranteed to result in an invalid array index, which will cause exceptions to be raised.
-        /// </remarks>
-        /// <param name="startIndex">The index of the first internal node to be considered by this call. Its shift is guaranteed to be zero if it is reachable, and some negative value otherwise.</param>
-        /// <param name="count">The number of internal nodes to be considered by this call. They form contiguous part of the array of internal nodes that starts at <paramref name="startIndex"/>.</param>
-        private static int computeShifts(int[] shifts, int startIndex, int count)
-        {
-            int acc = 0;
-            for (int i = startIndex; i < startIndex + count; i++)
-            {
-                switch (shifts[i])
-                {
-                    case 0:
-                        acc--;
-                        shifts[i] = Int32.MinValue;
-                        break;
-                    case 1:
-                        shifts[i] = acc;
-                        break;
-                    default:
-                        throw new NotImplementedException(string.Format("{0}[{1}] contains the value {2}, which {3} has not been crafted to deal with!", nameof(shifts), i, shifts[i], nameof(computeShifts)));
-                }
-            }
-            return acc;
-        }
-
-        /// <summary>
         /// Translates one internal node from an array of internal nodes to a new, compacted array.
-        /// Only reachable nodes will be copied and nodes will be shifted to the left, according to <paramref name="chunkShifts"/> and <paramref name="shifts"/>, such
+        /// Only reachable nodes will be copied and nodes will be shifted to the left, according to <paramref name="newIndices"/>, such
         /// that after this method has been called for all indices <paramref name="i"/> the array <paramref name="target"/> will contain precisely all the reachable nodes from <paramref name="source"/>.
-        /// Translation involves adjusting indices stored in the nodes according to <paramref name="chunkShifts"/> and <paramref name="shifts"/>.
+        /// Translation involves adjusting deltas stored in the nodes according to <paramref name="newIndices"/>.
         /// </summary>
         /// <param name="source">The array that the internal node is to be read from.</param>
-        /// <param name="chunkShifts">An array that holds one shift value for each chunk of <paramref name="source"/>.
-        /// A chunk is a contiguous part of <paramref name="source"/>. All chunks except for the last one must have length <paramref name="chunkSize"/>.
-        /// The shift value of a chunk indicates by how much the last internal node of that chunk is to be shifted to the left, globally; i.e. this shift value
-        /// may specify that the last item is to be moved outside of its original chunk.</param>
-        /// <param name="chunkSize">The number of internal nodes per chunk. All chunks of <paramref name="source"/> have this length, except for the very last one.</param>
-        /// <param name="shifts">An array that specifies by how much each internal node in <paramref name="source"/> is to be shifted to the left, *within* its chunk; i.e. the very first node in each chunk can only have value 0, if it is reachable. Unreachable nodes must bear a negative value!</param>
+        /// <param name="newIndices">An array that contains the new indices of all the internal nodes.</param>
         /// <param name="i">The index into <paramref name="source"/> specifying the internal node to be translated.</param>
         /// <param name="target">The array that nodes are to be written to.</param>
-        private static void shiftInternal(ImmutableArray<InternalNode> source, int[] chunkShifts, int chunkSize, int[] shifts, int i, InternalNode[] target)
+        private static void shiftInternal(ImmutableArray<InternalNode> source, int[] newIndices, int i, InternalNode[] target)
         {
-            if (shifts[i] == Int32.MinValue)
+            if (source[i].RightSiblingDelta == -1)
                 return;
 
             int translate(int idx)
             { 
-                return idx < 0 ? idx : idx + chunkShifts[idx / chunkSize] + shifts[idx];
+                return idx < 0 ? idx : newIndices[idx];
             }
 
             var node = source[i];
@@ -874,22 +765,17 @@ namespace Particles
 
         /// <summary>
         /// Translates one leaf node from an array of leaf nodes to a new one.
-        /// The coordinate of the next sibling of this node, which may be an internal node, will be shifted according to <paramref name="chunkShifts"/> and <paramref name="shifts"/>.
+        /// The coordinate of the next sibling of this node, which may be an internal node, will be adjusted according to <paramref name="newIndices"/>.
         /// </summary>
         /// <param name="source">The array that the leaf node is to be read from.</param>
-        /// <param name="chunkShifts">An array that holds one shift value for each chunk of the internal nodes that <paramref name="source"/> belongs to.
-        /// A chunk is a contiguous part of that internal node array. All chunks except for the last one must have length <paramref name="chunkSize"/>.
-        /// The shift value of a chunk indicates by how much the last internal node of that chunk is to be shifted to the left, globally; i.e. this shift value
-        /// may specify that the last item is to be moved outside of its original chunk.</param>
-        /// <param name="chunkSize">The number of internal nodes per chunk. All chunks have this length, except for the very last one.</param>
-        /// <param name="shifts">An array that specifies by how much each internal node is to be shifted to the left, *within* its chunk; i.e. the very first node in each chunk can only have value 0, if it is reachable. Unreachable nodes must bear a negative value!</param>
+        /// <param name="newIndices">An array that contains the new indices of all the internal nodes.</param>
         /// <param name="i">The index into <paramref name="source"/> specifying the leaf node to be translated.</param>
         /// <param name="target">The array that nodes are to be written to.</param>
-        private static void shiftLeaf(ImmutableArray<LeafNode> source, int[] chunkShifts, int chunkSize, int[] shifts, int i, LeafNode[] target)
+        private static void shiftLeaf(ImmutableArray<LeafNode> source, int[] newIndices, int i, LeafNode[] target)
         {
             int translate(int idx)
             {
-                return idx < 0 ? idx : idx + chunkShifts[idx / chunkSize] + shifts[idx];
+                return idx < 0 ? idx : newIndices[idx];
             }
 
             var iIdx = i - source.Length;
@@ -908,49 +794,21 @@ namespace Particles
         /// Compressing memory takes time, but reduces the amount of memory occupied by the octree.
         /// Furthermore, compressed octrees usually exhibit faster node accesses, because caches are used more efficiently.
         /// </remarks>
-        public Task<MortonOctree<T>> CompressMemory()
+        public MortonOctree<T> CompressMemory()
         {
-            return Task.Run(async () =>
-            {
-                if (leafNodes.Length < 2 || leafNodes.Length > internalNodes.Length)
-                    return this;
+            if (leafNodes.Length < 2 || leafNodes.Length > internalNodes.Length)
+                return this;
 
-                var shifts = new int[internalNodes.Length];
+            var newIndices = Util.ParallelPrefixCount(internalNodes, (n) => n.RightSiblingDelta != -1);
 
-                // Find reachable nodes:
-                await reach(new NodeReference(this, 0), shifts);
+            var newLeafNodes = new LeafNode[leafNodes.Length];
+            var newInternalNodes = new InternalNode[newIndices[newIndices.Length - 1] + 1];
 
-                // Compute deltas by which elements have to be shifted *within each chunk*:
-                var tasks = new Task<int>[Environment.ProcessorCount];
-                var stride = divUp(internalNodes.Length, tasks.Length);
-                var j = 0;
-                for (int i = 0; i < tasks.Length; i++)
-                {
-                    var count = Math.Min(stride, internalNodes.Length - j);
-                    var startIndex = j;
-                    tasks[i] = Task.Run(() => computeShifts(shifts, startIndex, count));
-                    j += count;
-                }
+            // Shift elements:
+            Parallel.For(0, leafNodes.Length, (i) => shiftLeaf(leafNodes, newIndices, i, newLeafNodes));
+            Parallel.For(0, internalNodes.Length, (i) => shiftInternal(internalNodes, newIndices, i, newInternalNodes));
 
-                var chunkShifts = await Task.WhenAll(tasks);
-
-                var acc = 0;
-                for (int i = 0; i < chunkShifts.Length; i++)
-                {
-                    var h = chunkShifts[i];
-                    chunkShifts[i] = acc;
-                    acc += h;
-                }
-
-                var newLeafNodes = new LeafNode[leafNodes.Length];
-                var newInternalNodes = new InternalNode[internalNodes.Length - acc];
-
-                // Shift elements:
-                Parallel.For(0, leafNodes.Length, (i) => shiftLeaf(leafNodes, chunkShifts, stride, shifts, i, newLeafNodes));
-                Parallel.For(0, internalNodes.Length, (i) => shiftInternal(internalNodes, chunkShifts, stride, shifts, i, newInternalNodes));
-
-                return new MortonOctree<T>(newLeafNodes.ToImmutableArray(), newInternalNodes.ToImmutableArray());
-            });
+            return new MortonOctree<T>(newLeafNodes.ToImmutableArray(), newInternalNodes.ToImmutableArray());
         }
 
         #endregion

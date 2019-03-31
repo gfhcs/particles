@@ -3,7 +3,6 @@ using Xunit;
 using Particles;
 using System.Linq;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using Xunit.Sdk;
 
 namespace Tests
@@ -121,7 +120,7 @@ namespace Tests
         }
 
         [Fact()]
-        public async Task TestEmpty()
+        public void TestEmpty()
         {
             var bounds = new AABB(new Vector3(0, 0, 0));
 
@@ -129,13 +128,11 @@ namespace Tests
 
             Assert.Throws(typeof(IndexOutOfRangeException), () => ot.Root);
 
-            var cot = await ot.CompressMemory();
-
-            Match(ot, cot);
+            Match(ot, ot.CompressMemory());
         }
 
         [Fact()]
-        public async Task TestSingleLeaf()
+        public void TestSingleLeaf()
         {
             var bounds = new AABB(new Vector3(0, 0, 0));
 
@@ -150,9 +147,7 @@ namespace Tests
             Assert.Equal((42, new Vector3(0, 0, 0)), r.Items.First());
             Assert.Equal(0, r.Children.Count());
 
-            var cot = await ot.CompressMemory();
-
-            Match(ot, cot);
+            Match(ot, ot.CompressMemory());
         }
 
         /// <summary>
@@ -170,9 +165,8 @@ namespace Tests
         /// 01111110 00000000 00000000 00000000 00000000 00000000 00000000 00000000
         /// </remarks>
         [Fact()]
-        public async Task TestSingleInternal()
+        public void TestSingleInternal()
         {
-
             var positions = new[] { new Vector3(0.5, 0.5, 0.5), new Vector3(0.5, 0.5, 1.5), new Vector3(0.5, 1.5, 0.5), new Vector3(0.5, 1.5, 1.5),
                                     new Vector3(1.5, 0.5, 0.5), new Vector3(1.5, 0.5, 1.5), new Vector3(1.5, 1.5, 0.5), new Vector3(1.5, 1.5, 1.5) };
 
@@ -193,9 +187,7 @@ namespace Tests
 
             AssertOctreeInvariants(ot);
 
-            var cot = await ot.CompressMemory();
-
-            Match(ot, cot);
+            Match(ot, ot.CompressMemory());
         }
 
         /// <summary>
@@ -225,7 +217,7 @@ namespace Tests
         /// 19 0111111000000000000000000000000000000000000000000000000000000000
         /// </remarks>
         [Fact()]
-        public async Task TestMoreInternal1()
+        public void TestMoreInternal1()
         {
 
             var positions = new[] { new Vector3(0.5, 0.5, 0.5), new Vector3(0.5, 0.6, 0.5), new Vector3(0.5, 1.5, 0.5), new Vector3(0.5, 1.5, 1.5), new Vector3(0.5, 1.6, 1.5), new Vector3(0.4, 1.5, 1.8),
@@ -266,9 +258,7 @@ namespace Tests
 
             AssertOctreeInvariants(ot);
 
-            var cot = await ot.CompressMemory();
-
-            Match(ot, cot);
+            Match(ot, ot.CompressMemory());
         }
 
         [Theory()]
@@ -276,7 +266,7 @@ namespace Tests
         [InlineData(100)]
         [InlineData(1000)]
         [InlineData(10000)]
-        public async Task TestRandom(int n)
+        public void TestRandom(int n)
         {
             // Create objects at random locations in [0, 1]^3 : 
             var positions = new Vector3[n];
@@ -299,9 +289,7 @@ namespace Tests
 
             AssertOctreeInvariants(ot);
 
-            var cot = await ot.CompressMemory();
-
-            Match(ot, cot);
+            Match(ot, ot.CompressMemory());
         }
     }
 }
