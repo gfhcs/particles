@@ -414,7 +414,7 @@ namespace Tests
             // at which this machine should be able to render the simulation
             var benchmarks = new Dictionary<MachineInfo, List<(int, double, double, double)>>();
 
-            var laptop = new MachineInfo("gereon-laptop.gereon", 3000000, 4, (long)8049484 * 1024, OperatingSystem.Linux);
+            var laptop = new MachineInfo("gereon-laptop.gereon", 3000000, 4, (long)8049464 * 1024, OperatingSystem.Linux);
             benchmarks[laptop] = new List<(int, double, double, double)>();
             benchmarks[laptop].Add((1, 3450, 50, 1.0));
             benchmarks[laptop].Add((10, 2450, 50, 1.0));
