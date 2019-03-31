@@ -1,8 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
-using System.Drawing;
-
-namespace Particles
+﻿namespace Particles
 {
     /// <summary>
     /// A method of processing subsequent states of a quantity.

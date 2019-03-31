@@ -1,9 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
-using System;
-using System.Collections.Immutable;
-using System.Threading.Tasks;
-using System.Threading;
 
 namespace Particles
 {
@@ -122,70 +119,6 @@ namespace Particles
                 acc = f((N)node, acc, c.Fold(f, initial));
 
             return acc;
-        }
-
-        /// <summary>
-        /// Folds the subtree under this node in a concurrent way.
-        /// </summary>
-        /// <remarks>
-        /// This method has the same semantics as <see cref="Fold{N, F}(N, Func{N, IEnumerable{F}, F})"/>.
-        /// However, it processes the tree in a parallel fashion, i.e. the children of a node are not always processes one after another, but
-        /// may be processed in parallel, depending on the size of the tree and the level of parallelism currently available on the machine.
-        /// </remarks>
-        /// <param name="node">A tree node.</param>
-        /// <param name="f">A procedure that processes values computed for the children of a node in order to obtain a value for that node.
-        /// It is called once after the child subtrees of a node have all been folded. Its parameters are the current node and the sequence of values obtained for the children.</param>
-        /// <typeparam name="F">The return type of <paramref name="f"/>.</typeparam>
-        /// <typeparam name="N">The type of <paramref name="node"/>.</typeparam>
-        public static Task<F> Fold<N, F>(this ITreeNode<N> node, Func<N, IEnumerable<Task<F>>, Task<F>> f) where N : ITreeNode<N>
-        {
-            /*
-             * This is my best shot so far at a manual implementation. However, I figured that the parallel distribution of work
-             * I am attempting here is exactly what the Task API must be able to do. And probably that API is better at it.
-             * 
-            int busy = 0;
-
-            bool reserve()
-            {
-                if (Interlocked.Increment(ref busy) > Environment.ProcessorCount)
-                {
-                    Interlocked.Decrement(ref busy);
-                    return false;
-                }
-                return true;
-            }
-
-            F work(N n, bool initial)
-            {
-                var childJobs = new Task<F>[n.Arity()];
-
-                var i = 0;
-                foreach (var c in n.Children)
-                    childJobs[i++] = reserve() ? Task.Run(() => work(c, true)) : Task.FromResult(work(c, false));
-
-                Interlocked.Decrement(ref busy); // Other people might still be working on jobs for me, but I am only waiting at this point!
-                var fs = await Task.WhenAll(childJobs);
-                Interlocked.Increment(ref busy); // I am done waiting.
-
-                var result = f(n, fs);
-
-                if (initial)
-                    Interlocked.Decrement(ref busy);
-
-                return result;
-            }
-
-            return work(node);
-
-            */
-
-            var childTasks = new Task<F>[node.Arity()];
-
-            var i = 0;
-            foreach (var c in node.Children)
-                childTasks[i++] = c.Fold(f);
-
-            return f((N)node, childTasks);
         }
 
         #endregion
