@@ -18,6 +18,12 @@ namespace Particles
     /// <summary>
     /// Represents a video file on the hard drive, to which frames can be appended.
     /// </summary>
+    /// <remarks>
+    /// The implementation of this class is based on FFMPEG.
+    /// When FFMPEG rejects input data, exceptions thrown by this class might not
+    /// always be sufficiently specific. Causes observed for such exceptions include:
+    /// - Target resolution being too low.
+    /// </remarks>
     public class VideoWriter : IDisposable
     {
         private static string codec2string(VideoCodec codec)
