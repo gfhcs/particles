@@ -38,6 +38,7 @@ namespace Particles
         private readonly VideoCodec codec;
         private readonly int width, height;
         private readonly double fps;
+        private Exception ffmpegCrash = null;
 
         /// <summary>
         /// Initializes a new <see cref="T:Particles.VideoWriter"/>.
@@ -67,9 +68,11 @@ namespace Particles
 
             ffmpeg.ErrorDataReceived += (object sender, DataReceivedEventArgs e) =>
             {
-                ffmpeg.CancelErrorRead();
                 if (e.Data != null && e.Data.Trim().Length > 0)
-                    throw new IOException(string.Format("FFMPEG reported an error: {0}", e.Data));
+                {
+                    ffmpeg.CancelErrorRead();
+                    ffmpegCrash = new IOException(string.Format("FFMPEG reported an error: {0}", e.Data));
+                }
             };
             ffmpeg.BeginErrorReadLine();
 
@@ -121,6 +124,15 @@ namespace Particles
         #endregion
 
         /// <summary>
+        /// Throws an exception containing information about why FFMPEG crashed.
+        /// </summary>
+        private void throwCrash()
+        {
+            if (ffmpegCrash != null)
+                throw ffmpegCrash;
+        }
+
+        /// <summary>
         /// Appends a frame to the video
         /// </summary>
         /// <exception cref="ArgumentException">If the given image does not have the same width and height as the video stream.</exception>
@@ -128,8 +140,10 @@ namespace Particles
         /// <param name="frame">Frame.</param>
         public void Append(Image frame)
         {
+            throwCrash();
             if (frame.Size != this.Resolution)
                 throw new ArgumentException(string.Format("Cannot add a frame of resolution {0}x{1} to a video with resolution {2}x{3} !", frame.Width, frame.Height, width, height));
+
             frame.Save(ffmpeg.StandardInput.BaseStream, ImageFormat.Jpeg);
         }
 
@@ -138,6 +152,7 @@ namespace Particles
         /// </summary>
         public void Close()
         {
+            throwCrash();
             if (stream == null)
                 throw new InvalidOperationException("This VideoWriter object has already been closed!");
 
