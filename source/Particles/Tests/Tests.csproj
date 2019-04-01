@@ -52,6 +52,7 @@
     <Compile Include="util\TimeFraction.cs" />
     <Compile Include="suites\OctreeTests.cs" />
     <Compile Include="suites\SimulationTests.cs" />
+    <Compile Include="suites\UtilTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
