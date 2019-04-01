@@ -659,7 +659,8 @@ namespace Particles
 
             Parallel.For(0, internals.Length, (i) => createInternalNode(mcs, i, leaves, internals));
 
-            internals[internals.Length - 1].RightSiblingDelta = -1; // We could use that node as our root, but we don't do so.
+            if (internals.Length > 0)
+                internals[internals.Length - 1].RightSiblingDelta = -1; // We could use that node as our root, but we don't do so.
 
             this.leafNodes = leaves.ToImmutableArray();
             this.internalNodes = internals.ToImmutableArray();
