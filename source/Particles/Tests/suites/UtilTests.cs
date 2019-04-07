@@ -1,7 +1,8 @@
 ﻿using System;
 using Xunit;
 using Particles;
-using System.Linq;
+using System.Collections.Concurrent;
+using System.Threading.Tasks;
 
 namespace Tests
 {
@@ -76,11 +77,19 @@ namespace Tests
             Util.ParallelPrefixSum(indicators);
             sw.Stop();
             var mTime = sw.Elapsed;
-            //Assert.Equal(groundTruth, indicators);
-            Assert.Equal(groundTruth[groundTruth.Length / 2], indicators[indicators.Length / 2]);
 
-            if (Environment.ProcessorCount > 1)
-                Assert.True(mTime < sTime, string.Format("Computing prefix sum in parallel ({0}) should have been much faster than on a single core ({1})!", mTime, sTime));
+            if (n <= 1024 * 1024)
+                Parallel.ForEach(Partitioner.Create(0, n), (range, _) =>
+                {
+                    for (int i = range.Item1; i < range.Item2; i++)
+                        Assert.Equal(groundTruth[i], indicators[i]);
+                });
+            else
+                for (int i = 0; i < n; i += rnd.Next(1024 * 1024))
+                    Assert.Equal(groundTruth[i], indicators[i]);
+
+            if (n >= 16 * 1024 * 1024 && Environment.ProcessorCount > 1)
+                Assert.True(mTime <= sTime, string.Format("Computing prefix sum in parallel ({0}) should have been much faster than on a single core ({1})!", mTime, sTime));
         }
     }
 }
