@@ -58,6 +58,7 @@ namespace Tests
         [InlineData(100000)]
         [InlineData(1000000)]
         [InlineData(10000000)]
+        [InlineData(100000000)]
         public void TestParallelPrefixSumLarge(int n)
         {
             var rnd = new Random();
@@ -66,9 +67,20 @@ namespace Tests
             for (int i = 0; i < indicators.Length; i++)
                 indicators[i] = rnd.Next() % 2;
 
+            var sw = System.Diagnostics.Stopwatch.StartNew();
             var groundTruth = PrefixSum(indicators);
+            sw.Stop();
+            var sTime = sw.Elapsed;
+            sw.Reset();
+            sw.Start();
             Util.ParallelPrefixSum(indicators);
-            Assert.Equal(groundTruth, indicators);
+            sw.Stop();
+            var mTime = sw.Elapsed;
+            //Assert.Equal(groundTruth, indicators);
+            Assert.Equal(groundTruth[groundTruth.Length / 2], indicators[indicators.Length / 2]);
+
+            if (Environment.ProcessorCount > 1)
+                Assert.True(mTime < sTime, string.Format("Computing prefix sum in parallel ({0}) should have been much faster than on a single core ({1})!", mTime, sTime));
         }
     }
 }

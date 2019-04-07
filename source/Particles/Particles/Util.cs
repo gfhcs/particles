@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
+using System.Collections.Concurrent;
 
 namespace Particles
 {
@@ -20,45 +21,89 @@ namespace Particles
         /// simply by filling <paramref name="indicators"/> with 0 and 1 entries only.
         /// </remarks>
         /// <param name="indicators">An array of integers.</param>
-        public static void ParallelPrefixSum(int[] indicators)
+        /// <param name="index">The first index of the range that is to be transformed into its prefix sum.</param>
+        /// <param name="length">The length of the range that is to be transformed into its prefix sum. It will be capped if the range would otherwise exceed the bounds of <paramref name="indicators"/>. </param>
+        /// <exception cref="IndexOutOfRangeException">If <paramref name="index"/> is not a valid index for <paramref name="indicators"/>.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">If <paramref name="length"/> is negative.</exception>
+        public static void ParallelPrefixSum(int[] indicators, int index=0, int length=int.MaxValue)
         {
-            var offsets = new List<(int, int)>();
-            offsets.Add((0, 0));
-            Parallel.For(0, indicators.Length, () => (-1, 0), (i, loop, acc) =>
-            {
-                return (i + 1, acc.Item2 + indicators[i]);
-            }, (acc) =>
-            {
-                lock (offsets) { offsets.Add(acc); }
-            });
+            if (!(0 <= index && index <= indicators.Length))
+                throw new IndexOutOfRangeException(string.Format("{0} must not be negative and at most as large as the length of {1}!", nameof(index), nameof(indicators)));
+            if (length < 0)
+                throw new ArgumentOutOfRangeException(nameof(length), string.Format("{0} must not be negative!", nameof(length)));
+            length = Math.Min(length, indicators.Length - index);
 
-            offsets.Sort((cs1, cs2) => cs1.Item1.CompareTo(cs2.Item1));
-
-            var count = 0;
-            for (int i = 0; i < offsets.Count; i++)
+            void AtomicPrefixSum((int, int, int) range)
             {
-                var o = offsets[i];
-                count += o.Item2;
-                offsets[i] = (o.Item1, count);
+                var acc = range.Item2;
+
+                for (int i = range.Item1; i < range.Item3; i++)
+                {
+                    var x = indicators[i];
+                    indicators[i] = acc;
+                    acc += x;
+                }
             }
 
-            Parallel.For(0, indicators.Length, () => -1, (i, loop, acc) =>
-            {
-                if (acc == -1)
-                {
-                    acc = 0;
-                    for (int j = 1; j < offsets.Count; j++)
-                        if (i < offsets[j].Item1)
-                        {
-                            acc = offsets[j - 1].Item2;
-                            break;
-                        }
-                }
+            if (length < 512) {
+                AtomicPrefixSum((index, 0, length));
+                return;
+            }
 
-                var newAcc = acc + indicators[i];
-                indicators[i] = acc;
-                return newAcc;
-            }, (_) =>{});
+            /// <summary>
+            /// Asserts that the given partitioner creates contiguous partitions.
+            /// </summary>
+            /// <returns>The given partitioner <paramref name="p"/></returns>
+            /// <param name="p">a partitioner.</param>
+            /// <typeparam name="T">The type of the elements that <paramref name="p"/> partitions.</typeparam>
+            OrderablePartitioner<T> assertSanePartitioner<T>(OrderablePartitioner<T> p)
+            {
+                if (!(p.KeysOrderedInEachPartition && p.KeysNormalized))
+                    throw new Exception(string.Format("The .NET implementation yielded an unexpected kind of parallel partitioner! The implementation of {0} is not prepared for this!", nameof(ParallelPrefixSum)));
+                return p;
+            }
+
+            var ibc = (length + Environment.ProcessorCount) / Environment.ProcessorCount;
+
+            var mtx = new object();
+            var blockEnds = new int[ibc]; // Where do blocks start?
+            var blockOffsets = new int[ibc]; // By how much should block contents be set off?
+            var numBlocks = 0;
+
+            // Loop over the partitions in parallel.
+            Parallel.ForEach(assertSanePartitioner(Partitioner.Create(index, length)), (range, _) =>
+            {
+                var sum = 0;
+                for (int i = range.Item1; i < range.Item2; i++)
+                    sum += indicators[i];
+
+                lock (mtx) {
+                    if (numBlocks == blockEnds.Length)
+                    {
+                        Array.Resize(ref blockEnds, 2 * blockEnds.Length);
+                        Array.Resize(ref blockOffsets, 2 * blockOffsets.Length);
+                    }
+                    blockEnds[numBlocks] = range.Item2;
+                    blockOffsets[numBlocks] = sum;
+                    numBlocks++;
+                 }
+            });
+
+            Array.Sort(blockEnds, blockOffsets, 0, numBlocks);
+
+            ParallelPrefixSum(blockOffsets, 0, numBlocks);
+
+            IEnumerable<(int, int, int)> enumeratePartitions()
+            {
+                var prevEnd = 0;
+                for (int i = 0; i < numBlocks; i++)
+                {
+                    yield return (prevEnd, blockOffsets[i], blockEnds[i]);
+                    prevEnd = blockEnds[i];
+                }
+            }
+
+            Parallel.ForEach(assertSanePartitioner(Partitioner.Create(enumeratePartitions())), (range, _) => AtomicPrefixSum(range));
         }
 
         /// <summary>

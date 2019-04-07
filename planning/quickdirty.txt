@@ -1,3 +1,4 @@
+Util.ParallelPrefixSum debuggen: Die Implementierung ist jetzt korrekt. Allerdings nutzt die Laufzeitumgebung die Kerne nicht richtig aus. Ich verstehe nicht, woran das liegt.
 OctreeTests debuggen: Wir haben Tasks aus MortonOctree eliminiert und die Compaction optimiert. Jetzt ist natürlich ein bischen was kaputt...
 SimulationTests laufen lassen und Phänomene überprüfen:
     TestCloud1: Why the fuck is memory suddenly exploding?! Should this test really take that long?
