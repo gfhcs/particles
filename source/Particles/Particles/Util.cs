@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Threading.Tasks;
 using System.Collections.Concurrent;
 
@@ -70,7 +69,6 @@ namespace Particles
             var blockOffsets = new int[ibc]; // By how much should block contents be set off?
             var numBlocks = 0;
 
-            // Loop over the partitions in parallel.
             Parallel.ForEach(assertSanePartitioner(Partitioner.Create(index, length)), (range, _) =>
             {
                 var sum = 0;
@@ -119,34 +117,9 @@ namespace Particles
         /// <param name="items">An array of items, some of which are to be counted.</param>
         /// <param name="indicator">A predicate returning true for those items that are to be counted.</param>
         /// <typeparam name="T">The type of the items to be counted.</typeparam>
-        public static int[] ParallelPrefixCount<T>(T[] items, Func<T, bool> indicator)
+        public static int[] ParallelPrefixCount<T>(IList<T> items, Func<T, bool> indicator)
         {
-            var indicators = new int[items.Length];
-            Parallel.For(0, indicators.Length, (i) =>
-            {
-                indicators[i] = indicator(items[i]) ? 1 : 0;
-            });
-
-            ParallelPrefixSum(indicators);
-            return indicators;
-        }
-
-        /// <summary>
-        /// Computes a prefix count of an array of items, i.e. returns an array
-        /// that indicates how many items before a given index satisfy the given predicate.
-        /// </summary>
-        /// <returns>An array of integers, the i-th cell of which indicates the number of items in <paramref name="items"/>[0:i - 1] that
-        /// satisfy the predicate <paramref name="indicator"/>.</returns>
-        /// <remarks>
-        /// The array returned by this method can be used for compaction, i.e. to project items satisfying <paramref name="indicator"/> into a new array that
-        /// then contains all satisfying items and only satisfying items.
-        /// </remarks>
-        /// <param name="items">An array of items, some of which are to be counted.</param>
-        /// <param name="indicator">A predicate returning true for those items that are to be counted.</param>
-        /// <typeparam name="T">The type of the items to be counted.</typeparam>
-        public static int[] ParallelPrefixCount<T>(ImmutableArray<T> items, Func<T, bool> indicator)
-        {
-            var indicators = new int[items.Length];
+            var indicators = new int[items.Count];
             Parallel.For(0, indicators.Length, (i) =>
             {
                 indicators[i] = indicator(items[i]) ? 1 : 0;
