@@ -384,7 +384,7 @@ namespace Tests
             var v = 0.5 * 1022.0; // Multiple of the velocity of the moon
             var s = 2 * 385001000.0; // multiple distance between Moon and Earth
             var d = 1 * 3600.0; // 1 hour
-            var D = 10 * 12 * 30 * 86400.0; // 10 years
+            var D = 30 * 86400.0; // 1 month
             await TestRandomCloud(n, s, n * m, r, n * 0.5 * m * v * v, d, D);
         }
 

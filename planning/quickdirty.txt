@@ -1,5 +1,4 @@
 SimulationTests laufen lassen und Phänomene überprüfen:
-    TestCloud1: Why the fuck is memory suddenly exploding?! Should this test really take that long?
     TestEarthMoon: Too much memory consumption. And why is that memory kept while the video is played?
 DocString: "A spatial index is a data structure that allows to efficiently find objects that are at or close to a given position in space."
 --> Vielleicht sollte man ISpatialIndex doch lieber zu einer abstrakten Klasse machen. Dann könnte man virtuelle Methoden zum Traversieren des Index bereitstellen. Und es ist unwahrscheinlich, dass ein spatial index noch von anderen Basisklassen erben will...
