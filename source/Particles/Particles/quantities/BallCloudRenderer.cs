@@ -102,7 +102,7 @@ namespace Particles
                     var y = bmp.Height / 2 - (int)(p.Y);
 
                     var d = cameraZ - p.Z;
-                    var b = Math.Min(255, (int)(255 * B / (d * d)));
+                    var b = Math.Max(0, Math.Min(255, (int)(255 * B / (d * d))));
 
                     g.FillEllipse(GetBrush(b), x - r / 2, y - r / 2, r, r);
                 }
