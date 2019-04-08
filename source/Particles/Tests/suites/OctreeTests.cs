@@ -266,6 +266,7 @@ namespace Tests
         [InlineData(100)]
         [InlineData(1000)]
         [InlineData(10000)]
+        [InlineData(100000)]
         public void TestRandom(int n)
         {
             // Create objects at random locations in [0, 1]^3 : 
