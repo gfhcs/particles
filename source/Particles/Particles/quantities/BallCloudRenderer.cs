@@ -21,6 +21,7 @@ namespace Particles
         private Vector3[] positions;
         private double[] radii;
         private readonly Bitmap[] bitmaps;
+        private Task<Image> resultTask = null;
         private readonly Graphics[] graphics;
         private readonly Task[] tasks;
 
@@ -72,8 +73,17 @@ namespace Particles
         protected virtual void Dispose(bool disposing)
         {
             if (disposing)
-                foreach (var g in graphics)
-                    g.Dispose();
+            {
+                lock (this)
+                {
+                    if (resultTask != null)
+                        resultTask.Wait();
+                    foreach (var g in graphics)
+                        g.Dispose();
+                    foreach (var bmp in bitmaps)
+                        bmp.Dispose();
+                }
+            }
         }
 
         private class ZComparer : IComparer<Vector3>
@@ -120,50 +130,71 @@ namespace Particles
             });
         }
 
-        public async Task<Image> Render(BallCloud c)
+        public void Render(BallCloud c)
         {
             lock (this)
             {
                 if (busy)
                     throw new InvalidOperationException(string.Format("The renderer is already occupied with a call to {0}! Do not call {0} before the previous call completed!", nameof(Render)));
                 busy = true;
+
+                this.resultTask = Task.Run(async () =>
+                {
+                    var N = c.Positions.Length;
+
+                    // Sort particles by Z:
+                    if (positions == null || positions.Length != N)
+                    {
+                        positions = new Vector3[N];
+                        radii = new double[N];
+                    }
+                    Array.Copy(c.Positions, positions, N);
+                    Array.Copy(c.Radii, radii, N);
+                    Array.Sort(positions, radii, ZComparer.Instance);
+
+                    // Launch tasks:
+                    var pc = Environment.ProcessorCount;
+
+                    var bpp = Math.Min(N, Math.Max(256, N / pc));
+
+                    var tc = bpp > 0 ? N / bpp : 1;
+
+                    var count = bpp + N % bpp;
+                    var i = N - count;
+
+                    for (int tid = tc - 1; tid >= 0; tid--)
+                    {
+                        tasks[tid] = render(tc, tid, i, count);
+                        count = bpp;
+                        i -= bpp;
+                    }
+
+                    await Task.WhenAll(tasks.Take(tc)).ConfigureAwait(false);
+
+                    lock (this)
+                    {
+                        busy = false;
+                        return (Image)bitmaps[0];
+                    }
+                });
             }
+        }
 
-            var N = c.Positions.Length;
-
-            // Sort particles by Z:
-            if (positions == null || positions.Length != N)
+        /// <summary>
+        /// The result of the last call to Render.
+        /// The object returned by this task is not thread-safe and must not be accessed as long as this property holds an unfinished task!
+        /// </summary>
+        /// <remarks>
+        /// The object returned by this task is owned and managed by the <see cref="BallCloudRenderer"/>, which means that calls to methods
+        /// of <see cref="BallCloudRenderer"/> or even disposing the instance that created this task may make the image unusable (because
+        /// it is concurrently written to or deallocated). This is why users of this property should only work on *copies* of the obtained image,
+        /// should they intend to keep accessing it after the next call to <see cref="Render(BallCloud)"/> or after disposing the <see cref="BallCloudRenderer"/>.
+        /// </remarks>
+        public Task<Image> RenderedState
+        {
+            get
             {
-                positions = new Vector3[N];
-                radii = new double[N];
-            }
-            Array.Copy(c.Positions, positions, N);
-            Array.Copy(c.Radii, radii, N);
-            Array.Sort(positions, radii, ZComparer.Instance);
-
-            // Launch tasks:
-            var pc = Environment.ProcessorCount;
-
-            var bpp = Math.Min(N, Math.Max(256, N / pc));
-
-            var tc = bpp > 0 ? N / bpp : 1;
-
-            var count = bpp + N % bpp;
-            var i = N - count;
-
-            for (int tid = tc - 1; tid >= 0; tid--)
-            {
-                tasks[tid] = render(tc, tid, i, count);
-                count = bpp;
-                i -= bpp;
-            }
-
-            await Task.WhenAll(tasks.Take(tc)).ConfigureAwait(false);
-
-            lock (this)
-            {
-                busy = false;
-                return (Image)bitmaps[0].Clone();
+                return resultTask;
             }
         }
     }

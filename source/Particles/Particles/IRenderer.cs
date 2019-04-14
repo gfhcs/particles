@@ -8,12 +8,19 @@
     public interface IRenderer<Q, T> where Q : IQuantity<Q>
     {
         /// <summary>
-        /// Processes the given quantity, yielding a rendering result.
+        /// Processes the given quantity. The result can be obtained via <see cref="RenderedState"/>.
         /// This method assumes that the given quantity evolved from the quantity
         /// it was last called for.
         /// </summary>
-        /// <returns>The rendering result.</returns>
         /// <param name="q">A quantity to render.</param>
-        T Render(Q q);
+        void Render(Q q);
+
+        /// <summary>
+        /// The result of the last call to <see cref="Render(Q)"/>.
+        /// </summary>
+        T RenderedState
+        {
+            get;
+        }
     }
 }

@@ -148,7 +148,10 @@ namespace Tests
                         {
                             var c = stateBuffer.Take();
                             watch.Restart();
-                            vw.Append(await renderer.Render(c).ConfigureAwait(false));
+
+                            renderer.Render(c);
+                            vw.Append(await renderer.RenderedState.ConfigureAwait(false));
+
                             watch.Stop();
                             stepCount++;
 
