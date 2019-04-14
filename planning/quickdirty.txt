@@ -1,7 +1,12 @@
 SimulationTests laufen lassen und Phänomene überprüfen:
-    TestEarthMoon: Too much memory consumption. And why is that memory kept while the video is played?
-DocString: "A spatial index is a data structure that allows to efficiently find objects that are at or close to a given position in space."
+    Conduct tests on the big desktop machine: Do we meet memory and time requirements?
+BallCloudRenderer: Factor out position mapping (from world space to image space) and then create a subclass that computes an octree for the current frame and renders it. Most interesting would be to have a mask over the particles that tells it to only expand Octree volumes in which activated particles are present. This should result in a very interesting video as particles move around. Do not parallelize at first! This is mostly for debugging and probably efficient enough anyway. We should do it in parallel to the rendering of the balls, though.
+MortonOctree: Add a threshold on the number of objects under a node: If a node has less than the given number of objects under it, it should not have any child nodes anymore
+    --> Avoids unnecessary memory overhead and jumping around in memory for small bunches of particles
+    --> This creates another reason why a node should mark potential child nodes as "unused" during construction.
 --> Vielleicht sollte man ISpatialIndex doch lieber zu einer abstrakten Klasse machen. Dann könnte man virtuelle Methoden zum Traversieren des Index bereitstellen. Und es ist unwahrscheinlich, dass ein spatial index noch von anderen Basisklassen erben will...
+Make a profiling run of some typical test case. Where do we spent most of our time?
+DocString: "A spatial index is a data structure that allows to efficiently find objects that are at or close to a given position in space."
 Make BallCloudGradient use Octree.
 Optimization: Can one have symmetric Barnes-Hut? I.e. can we also *write* the gravity exercised on a whole cluster?
 Optimizaton: Parallelize Barnes-Hut
