@@ -433,7 +433,7 @@ namespace Tests
             benchmarks[laptop].Add((750, 3, 30, 8.5));
             benchmarks[laptop].Add((1024, 1.5, 24.5, 15.2));
 
-            var desktopMachine = new MachineInfo("gereon-desktop", 3800000, 12, (long)67465666560, OperatingSystem.Linux);
+            var desktopMachine = new MachineInfo("gereon-desktop", 3800000, 12, (long)67465445376, OperatingSystem.Linux);
             benchmarks[desktopMachine] = new List<(int, double, double, double)>();
             benchmarks[desktopMachine].Add((1, 3500, 60, 0.75));
             benchmarks[desktopMachine].Add((10, 3000, 60, 0.75));
