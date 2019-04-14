@@ -62,10 +62,14 @@ namespace Particles
         /// <summary>
         /// The state up to which the development of the quantity has been simulated.
         /// </summary>
+        /// <remarks>
+        /// Note that the object returnd by this property is owned and managed by <see cref="Simulation{Q, G}"/>!
+        /// This means that subsequence calls to <see cref="Advance(double)"/> will modify this object!
+        /// </remarks>
         public Q State
         {
             get{
-                return state.Copy();
+                return state;
             }
         }
 

@@ -105,7 +105,7 @@ namespace Tests
 
                 var sim = new Simulation<BallCloud, BallCloudGradient>(state, integrator, stepSize);
 
-                stateBuffer.Add(sim.State);
+                stateBuffer.Add(sim.State.Copy());
 
                 int stepCount = 0;
                 try
@@ -116,7 +116,7 @@ namespace Tests
                         sim.Advance(dt);
                         watch.Stop();
                         stepCount++;
-                        stateBuffer.Add(sim.State);
+                        stateBuffer.Add(sim.State.Copy());
 
                         lock (mutex)
                         {
