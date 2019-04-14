@@ -95,6 +95,12 @@ namespace Tests
 
             var mutex = new object();
 
+            // Capacity of the buffer is unlimited.
+            // Reason: Either advancing state is very fast, which means that
+            // states are probably very small, in which case we do not need to
+            // be worried about memory too much. Or advancing state is slower than
+            // rendering it, which means that the buffer will never grow to more than
+            // one or two states anyway.
             var stateBuffer = new BlockingCollection<BallCloud>();
 
             var totalTime = Stopwatch.StartNew();
