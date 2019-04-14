@@ -617,6 +617,9 @@ namespace Particles
             }
         }
 
+        // TODO: Parallelization might benefit from a different layout of <see cref="leafNodes"> and <see cref="internalNodes">:
+        //       Organizing them as structs of arrays, instead of arrays of structs allows for higher memory throughput.
+        //       However, I reckon this only has a positive effect if we run things on the GPU.
         private readonly ImmutableArray<LeafNode> leafNodes;
         private readonly ImmutableArray<InternalNode> internalNodes;
 
