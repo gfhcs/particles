@@ -367,7 +367,7 @@ namespace Tests
 
             var state = new BallCloud(2);
 
-            var stepSize =  0.1;
+            var stepSize =  1.0;
             state.Positions[0] = new Vector3(0, 0, 0);
             state.Positions[1] = new Vector3(362600000, 0, 0);
 
