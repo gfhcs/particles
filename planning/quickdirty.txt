@@ -2,7 +2,6 @@ BallCloudRenderer: Factor out position mapping (from world space to image space)
 MortonOctree: Add a threshold on the number of objects under a node: If a node has less than the given number of objects under it, it should not have any child nodes anymore
     --> Avoids unnecessary memory overhead and jumping around in memory for small bunches of particles
     --> This creates another reason why a node should mark potential child nodes as "unused" during construction.
-Make a profiling run of some big simulation case. Where do we spent most of our time?
 DocString: "A spatial index is a data structure that allows to efficiently find objects that are at or close to a given position in space."
     --> Vielleicht sollte man ISpatialIndex doch lieber zu einer abstrakten Klasse machen. Dann könnte man virtuelle Methoden zum Traversieren des Index bereitstellen. Und es ist unwahrscheinlich, dass ein spatial index noch von anderen Basisklassen erben will...
 Make BallCloudGradient use Octree. Use the Wikipedia article about Barnes-Hut!
@@ -22,6 +21,7 @@ Optimization: Simulation parallelisieren
     Innerhalb eines jeden Blocks werden alle Wechselwirkungen berechnet.
     Der i-te Block hat i - 1 Fremdblöcke, in die andere Prozessoren Wechselwirkungen ihres Blocks mit dem i-ten eintragen können.
     
+Make a profiling run of some big simulation case. Where do we spent most of our time?
 Optimization: Embedded Runge-Kutta
 Optimization: Separate step sizes for each particle
 Implement symplectic integrators and create test cases for them. See English Wikipedia page.
