@@ -9,7 +9,7 @@ using System.Linq;
 namespace Particles
 {
     /// <summary>
-    /// A simple renderer for ball clouds.
+    /// Renders states of a ball cloud to images.
     /// </summary>
     public class BallCloudRenderer : IRenderer<BallCloud, Task<Image>>, IDisposable
     {
@@ -27,6 +27,12 @@ namespace Particles
 
         private readonly Color transparent = Color.FromArgb(0, 0, 0, 0);
 
+        /// <summary>
+        /// Creates a new renderer for ball clouds.
+        /// </summary>
+        /// <param name="width">The frame width of the rendered images.</param>
+        /// <param name="height">The frame height of the rendered images.</param>
+        /// <param name="scale">The factor by which lengths in world space are to be multiplied to obtain image space coordinates (pixels per meter).</param>
         public BallCloudRenderer(int width, int height, double scale)
         {
             this.scale = scale;
@@ -46,6 +52,24 @@ namespace Particles
                 bitmaps[i] = bmp;
                 graphics[i] = g;
             }
+        }
+
+        /// <summary>
+        /// The frame width of the rendered images.
+        /// </summary>
+        /// <value>The width.</value>
+        public int Width
+        {
+            get { return bitmaps[0].Width; }
+        }
+
+        /// <summary>
+        /// The frame width of the rendered images.
+        /// </summary>
+        /// <value>The width.</value>
+        public int Height
+        {
+            get { return bitmaps[0].Height; }
         }
 
         private static SolidBrush[] brushCache = new SolidBrush[256];
@@ -86,6 +110,19 @@ namespace Particles
             }
         }
 
+        /// <summary>
+        /// Maps the given point (in world coordinates) to image space.
+        /// </summary>
+        /// <param name="worldPoint">A position in 3D space.</param>
+        protected Point ToImage(Vector3 worldPoint)
+        {
+            var p = scale * worldPoint;
+            var x = this.Width / 2 + (int)(p.X);
+            var y = this.Height / 2 - (int)(p.Y);
+
+            return new Point(x, y);
+        }
+
         private class ZComparer : IComparer<Vector3>
         {
             public static ZComparer Instance = new ZComparer();
@@ -106,15 +143,14 @@ namespace Particles
 
                 for (int i = startIndex; i < startIndex + count; i++)
                 {
-                    var p = scale * positions[i];
-                    var r = Math.Max(1, (int)(scale * radii[i]));
-                    var x = bmp.Width / 2 + (int)(p.X);
-                    var y = bmp.Height / 2 - (int)(p.Y);
+                    var p = this.ToImage(positions[i]);
 
-                    var d = cameraZ - p.Z;
+                    var r = Math.Max(1, (int)(scale * radii[i]));
+
+                    var d = cameraZ - scale * positions[i].Z;
                     var b = Math.Max(0, Math.Min(255, (int)(255 * B / (d * d))));
 
-                    g.FillEllipse(GetBrush(b), x - r / 2, y - r / 2, r, r);
+                    g.FillEllipse(GetBrush(b), p.X - r / 2, p.Y - r / 2, r, r);
                 }
                 g.Flush(FlushIntention.Sync);
 
