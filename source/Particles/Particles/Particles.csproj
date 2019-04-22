@@ -55,6 +55,7 @@
     <Compile Include="ITree.cs" />
     <Compile Include="ISpatialIndex.cs" />
     <Compile Include="Util.cs" />
+    <Compile Include="quantities\OctreeRenderer.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
