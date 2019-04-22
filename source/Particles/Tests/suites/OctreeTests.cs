@@ -74,7 +74,7 @@ namespace Tests
 
                     Assert.True(node.Items.Any(), "A leaf node that does not contain any items was found!");
 
-                    return (from p in node.Items select new AABB(p.Item2)).Aggregate(AABB.Bound);
+                    return AABB.Bound(from p in node.Items select p.Item2);
                 }
                 else
                 {
@@ -87,9 +87,9 @@ namespace Tests
 
                     Assert.Equal(cc, childBoxes.Length);
 
-                    var childUnion = childBoxes.Aggregate(AABB.Bound);
+                    var childUnion = AABB.Bound(childBoxes);
 
-                    var parentBox = (from p in node.Items select new AABB(p.Item2)).Aggregate(AABB.Bound);
+                    var parentBox = AABB.Bound(from p in node.Items select p.Item2);
 
                     // Partent box and smallest upper bound of the child boxes should be the same:
                     var dox = parentBox.Origin.X - childUnion.Origin.X;
@@ -122,7 +122,7 @@ namespace Tests
         [Fact()]
         public void TestEmpty()
         {
-            var bounds = new AABB(new Vector3(0, 0, 0));
+            var bounds = AABB.Empty;
 
             var ot = new MortonOctree<int>(new (int, Vector3)[0], bounds);
 
