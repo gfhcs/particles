@@ -94,6 +94,17 @@ namespace Particles
             return (size.X * size.Y * size.Z).GetHashCode();
         }
 
+        public static bool operator ==(AABB a, AABB b)
+        {
+            return a.Equals(b);
+        }
+
+        public static bool operator !=(AABB a, AABB b)
+        {
+            return !a.Equals(b);
+        }
+
+
         /// <summary>
         /// The origin of the box, i.e. the point with the minimal coordinates for all dimensions.
         /// </summary>

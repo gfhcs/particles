@@ -83,6 +83,16 @@ namespace Particles
             return unchecked(31 * x.GetHashCode() + 7 * y.GetHashCode() + z.GetHashCode());
         }
 
+        public static bool operator ==(Vector3 a, Vector3 b)
+        {
+            return a.Equals(b);
+        }
+
+        public static bool operator !=(Vector3 a, Vector3 b)
+        {
+            return !a.Equals(b);
+        }
+
         public override string ToString()
         {
             return string.Format(System.Globalization.CultureInfo.InvariantCulture, "({0}, {1}, {2})", x, y, z);
