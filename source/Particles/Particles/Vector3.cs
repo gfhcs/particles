@@ -9,6 +9,21 @@ namespace Particles
         private readonly double x, y, z;
 
         /// <summary>
+        /// A value that is "not a vector".
+        /// </summary>
+        public static readonly Vector3 NaV = new Vector3(double.NaN, double.NaN, double.NaN);
+
+        /// <summary>
+        /// Indicates whether the given value is "not a vector".
+        /// </summary>
+        /// <returns><c>true</c>, if the value is not a proper vector, <c>false</c> if it is.</returns>
+        /// <param name="v">A vector value.</param>
+        public static bool IsNaV(Vector3 v)
+        {
+            return double.IsNaN(v.X) || double.IsNaN(v.Y) || double.IsNaN(v.Z);
+        }
+
+        /// <summary>
         /// Creates a new Vector 3.
         /// </summary>
         /// <param name="x">The x component.</param>
@@ -55,9 +70,13 @@ namespace Particles
             }
         }
 
+        #region "Equality"
+
         public int CompareTo(Vector3 other)
         {
-            var c = this.x.CompareTo(other.x);
+            var c = IsNaV(this).CompareTo(IsNaV(other));
+            if (c != 0) return c;
+            c = this.x.CompareTo(other.x);
             if (c != 0) return c;
             c = y.CompareTo(other.y);
             if (c != 0) return c;
@@ -66,7 +85,7 @@ namespace Particles
 
         public bool Equals(Vector3 other)
         {
-            return this.x.Equals(other.x) && this.y.Equals(other.y) && this.z.Equals(other.z);
+            return IsNaV(this).Equals(IsNaV(other)) && this.x.Equals(other.x) && this.y.Equals(other.y) && this.z.Equals(other.z);
         }
 
         public override bool Equals(object obj)
@@ -80,7 +99,7 @@ namespace Particles
 
         public override int GetHashCode()
         {
-            return unchecked(31 * x.GetHashCode() + 7 * y.GetHashCode() + z.GetHashCode());
+            return IsNaV(this) ? 0 : (31 * x.GetHashCode() + 7 * y.GetHashCode() + z.GetHashCode());
         }
 
         public static bool operator ==(Vector3 a, Vector3 b)
@@ -92,6 +111,8 @@ namespace Particles
         {
             return !a.Equals(b);
         }
+
+        #endregion
 
         public override string ToString()
         {
