@@ -25,7 +25,7 @@ namespace Particles
         private readonly Graphics[] graphics;
         private readonly Task[] tasks;
 
-        private readonly Color transparent = Color.FromArgb(0, 0, 0, 0);
+        protected readonly Color Transparent = Color.FromArgb(0, 0, 0, 0);
 
         /// <summary>
         /// Creates a new renderer for ball clouds.
@@ -47,7 +47,7 @@ namespace Particles
             for (var i = 0; i < pc; i++){
                 var bmp = new Bitmap(width, height, PixelFormat.Format32bppArgb);
                 var g = Graphics.FromImage(bmp);
-                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+                g.SmoothingMode = SmoothingMode.HighQuality;
                 g.CompositingMode = CompositingMode.SourceOver;
                 bitmaps[i] = bmp;
                 graphics[i] = g;
@@ -111,12 +111,32 @@ namespace Particles
         }
 
         /// <summary>
+        /// Scales the given delta according to the scale factor of this renderer.
+        /// </summary>
+        /// <returns>The product of <paramref name="d"/> with the scale factor of this renderer.</returns>
+        /// <param name="d">A length in 3D space.</param>
+        protected double Scale(double d)
+        {
+            return scale * d;
+        }
+
+        /// <summary>
+        /// Scales the given delta vector according to the scale factor of this renderer.
+        /// </summary>
+        /// <returns>The product of <paramref name="d"/> with the scale factor of this renderer.</returns>
+        /// <param name="d">A length in 3D space.</param>
+        protected Vector3 Scale(Vector3 d)
+        {
+            return scale * d;
+        }
+
+        /// <summary>
         /// Maps the given point (in world coordinates) to image space.
         /// </summary>
         /// <param name="worldPoint">A position in 3D space.</param>
         protected Point ToImage(Vector3 worldPoint)
         {
-            var p = scale * worldPoint;
+            var p = Scale(worldPoint);
             var x = this.Width / 2 + (int)(p.X);
             var y = this.Height / 2 - (int)(p.Y);
 
@@ -139,15 +159,15 @@ namespace Particles
                 var bmp = bitmaps[tid];
                 var g = graphics[tid];
 
-                g.Clear(tid == 0 ? Color.Black : transparent);
+                g.Clear(tid == 0 ? Color.Black : Transparent);
 
                 for (int i = startIndex; i < startIndex + count; i++)
                 {
                     var p = this.ToImage(positions[i]);
 
-                    var r = Math.Max(1, (int)(scale * radii[i]));
+                    var r = Math.Max(1, (int)(Scale(radii[i])));
 
-                    var d = cameraZ - scale * positions[i].Z;
+                    var d = cameraZ - Scale(positions[i].Z);
                     var b = Math.Max(0, Math.Min(255, (int)(255 * B / (d * d))));
 
                     g.FillEllipse(GetBrush(b), p.X - r / 2, p.Y - r / 2, r, r);
@@ -166,7 +186,7 @@ namespace Particles
             });
         }
 
-        public void Render(BallCloud c)
+        public virtual void Render(BallCloud c)
         {
             lock (this)
             {
@@ -226,7 +246,7 @@ namespace Particles
         /// it is concurrently written to or deallocated). This is why users of this property should only work on *copies* of the obtained image,
         /// should they intend to keep accessing it after the next call to <see cref="Render(BallCloud)"/> or after disposing the <see cref="BallCloudRenderer"/>.
         /// </remarks>
-        public Task<Image> RenderedState
+        public virtual Task<Image> RenderedState
         {
             get
             {
