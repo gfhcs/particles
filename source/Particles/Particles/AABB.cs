@@ -153,7 +153,8 @@ namespace Particles
                 var y = intersectDimension(i.Origin.Y, i.Size.Y, b.Origin.Y, b.size.Y);
                 var z = intersectDimension(i.Origin.Z, i.Size.Z, b.Origin.Z, b.size.Z);
 
-                i = new AABB(new Vector3(x.Item1, y.Item1, z.Item1), new Vector3(x.Item2, y.Item2, z.Item2));
+                o = new Vector3(x.Item1, y.Item1, z.Item1);
+                i = new AABB(o, Vector3.IsNaV(o) ? new Vector3() : new Vector3(x.Item2, y.Item2, z.Item2));
             }
 
             return i;
