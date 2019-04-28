@@ -111,23 +111,24 @@ namespace Particles
         }
 
         /// <summary>
-        /// Scales the given delta according to the scale factor of this renderer.
+        /// Converts the given scalar delta into a delta value in image space.
         /// </summary>
-        /// <returns>The product of <paramref name="d"/> with the scale factor of this renderer.</returns>
+        /// <returns>The length of the scalar delta in image space.</returns>
         /// <param name="d">A length in 3D space.</param>
-        protected double Scale(double d)
+        protected double ScaleDelta(double d)
         {
             return scale * d;
         }
 
         /// <summary>
-        /// Scales the given delta vector according to the scale factor of this renderer.
+        /// Converts the given 3D delta into a delta vector in the image space.
         /// </summary>
-        /// <returns>The product of <paramref name="d"/> with the scale factor of this renderer.</returns>
-        /// <param name="d">A length in 3D space.</param>
-        protected Vector3 Scale(Vector3 d)
+        /// <returns>The x- and y-component of the image-space delta vector.</returns>
+        /// <param name="d">A delta vector in 3D space.</param>
+        protected (int, int) ScaleDelta(Vector3 d)
         {
-            return scale * d;
+            var s = scale * d;
+            return ((int)s.X, -(int)s.Y);
         }
 
         /// <summary>
@@ -136,11 +137,8 @@ namespace Particles
         /// <param name="worldPoint">A position in 3D space.</param>
         protected Point ToImage(Vector3 worldPoint)
         {
-            var p = Scale(worldPoint);
-            var x = this.Width / 2 + (int)(p.X);
-            var y = this.Height / 2 - (int)(p.Y);
-
-            return new Point(x, y);
+            var p = ScaleDelta(worldPoint);
+            return new Point(this.Width / 2 + p.Item1, this.Height / 2 + p.Item2);
         }
 
         private class ZComparer : IComparer<Vector3>
@@ -165,9 +163,9 @@ namespace Particles
                 {
                     var p = this.ToImage(positions[i]);
 
-                    var r = Math.Max(1, (int)(Scale(radii[i])));
+                    var r = Math.Max(1, (int)ScaleDelta(radii[i]));
 
-                    var d = cameraZ - Scale(positions[i].Z);
+                    var d = cameraZ - ScaleDelta(positions[i].Z);
                     var b = Math.Max(0, Math.Min(255, (int)(255 * B / (d * d))));
 
                     g.FillEllipse(GetBrush(b), p.X - r, p.Y - r, 2 * r, 2 * r);

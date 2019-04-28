@@ -87,9 +87,9 @@ namespace Particles
                 // We ignore the Z dimension, because it's not visible in this kind of renderer anyway.
 
                 var o = ToImage(box.Origin);
-                var s = Scale(box.Size);
+                var s = ScaleDelta(box.Size);
 
-                g.DrawRectangle(octreePen, o.X, o.Y, (int)s.X, (int)s.Y);
+                g.DrawRectangle(octreePen, o.X, o.Y + s.Item2, s.Item1, -s.Item2);
             }
 
             // Render the octree:
