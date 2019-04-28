@@ -170,7 +170,7 @@ namespace Particles
                     var d = cameraZ - Scale(positions[i].Z);
                     var b = Math.Max(0, Math.Min(255, (int)(255 * B / (d * d))));
 
-                    g.FillEllipse(GetBrush(b), p.X - r / 2, p.Y - r / 2, r, r);
+                    g.FillEllipse(GetBrush(b), p.X - r, p.Y - r, 2 * r, 2 * r);
                 }
                 g.Flush(FlushIntention.Sync);
 

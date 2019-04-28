@@ -374,8 +374,8 @@ namespace Tests
             state.Masses[0] = 5.97237E24;
             state.Masses[1] = 7.342E22;
 
-            state.Radii[0] = 10 * 6371000.0;
-            state.Radii[1] = 10 * 1737100.0;
+            state.Radii[0] = 5 * 6371000.0;
+            state.Radii[1] = 5 * 1737100.0;
 
             await TestSimulation(state, new RK4<BallCloud, BallCloudGradient>(), fileName, w, h, scale, fps, stepSize, visualDuration, simulatedDuration);
         }
