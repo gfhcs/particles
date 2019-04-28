@@ -81,7 +81,7 @@ namespace Particles
                     {
                         var p = g.Current;
                         o = new Vector3(Math.Min(o.X, p.X), Math.Min(o.Y, p.Y), Math.Min(o.Z, p.Z));
-                        e = new Vector3(Math.Max(o.X, p.X), Math.Max(o.Y, p.Y), Math.Max(o.Z, p.Z));
+                        e = new Vector3(Math.Max(e.X, p.X), Math.Max(e.Y, p.Y), Math.Max(e.Z, p.Z));
                     }
 
                     if (Vector3.IsNaV(o))
