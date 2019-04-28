@@ -156,8 +156,8 @@ namespace Particles
                     lock (this) { 
                         using (var g2 = Graphics.FromImage(underlying))
                         {
-                            g.DrawImageUnscaled(bmp, 0, 0);
-                            g.Flush(FlushIntention.Sync);
+                            g2.DrawImageUnscaled(bmp, 0, 0);
+                            g2.Flush(FlushIntention.Sync);
                         }
 
                         busy = false;
