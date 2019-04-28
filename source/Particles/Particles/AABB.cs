@@ -268,7 +268,7 @@ namespace Particles
                 return "empty";
             if (this.IsFull)
                 return "full";
-            return string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0}x{1}x{2}@{3}", origin.X, origin.Y, origin.Z, size);
+            return string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0}x{1}x{2}@{3}", size.X, size.Y, size.Z, origin);
         }
     }
 }
