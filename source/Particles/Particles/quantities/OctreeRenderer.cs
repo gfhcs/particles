@@ -78,7 +78,7 @@ namespace Particles
                 var p = c.Positions[idx];
                 var r = c.Radii[idx];
                 var rv = new Vector3(r, r, r);
-                return new AABB(p - rv / 2, rv);
+                return new AABB(p - rv, 2 * rv);
             }
 
             // Renders the given AABB.
