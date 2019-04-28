@@ -84,6 +84,9 @@ namespace Particles
                         e = new Vector3(Math.Max(o.X, p.X), Math.Max(o.Y, p.Y), Math.Max(o.Z, p.Z));
                     }
 
+                    if (Vector3.IsNaV(o))
+                        throw new ArgumentException("An underspecified point was given, i.e. with at least one coordinate being NaN!");
+
                     return new AABB(o, e - o);
                 }
                 return AABB.Empty;
@@ -105,7 +108,16 @@ namespace Particles
         /// <param name="bbs">A set of AABB's.</param>
         public static AABB Bound(IEnumerable<AABB> bbs)
         {
-            return Bound(bbs.SelectMany((b) => new[] {b.Origin, b.origin + b.Size}));
+            IEnumerable<Vector3> traverse()
+            {
+                foreach (var b in bbs)
+                    if (!b.IsEmpty) {
+                        yield return b.Origin;
+                        yield return b.Origin + b.Size;
+                    }
+            }
+
+            return Bound(traverse());
         }
 
         /// <summary>
